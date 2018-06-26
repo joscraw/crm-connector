@@ -1,0 +1,14 @@
+/* ------------------------- CSS --------------------------- */
+
+
+.form-error {
+    color: red;
+}
+
+.form-error + input {
+    border: 1px solid red;
+}
+
+.nav {
+    margin-bottom: 20px;
+}
