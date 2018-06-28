@@ -27,7 +27,6 @@ function renderGenericErrorMessage($errors)
         $html .= "<p>$error</p>";
     }
     $html .= "</div>";
-
     return $html;
 }
 
@@ -42,4 +41,23 @@ function renderSuccessMessage($successMessage) {
     if (!$successMessage) return;
     $html = "<div class='alert alert-success' role='alert'>$successMessage</div>";
     return $html;
+}
+
+
+/**
+ * Delete all transients so you don't get any message overlaps
+ */
+function deleteTransients() {
+    delete_transient('errors');
+    delete_transient('successMessage');
+}
+
+
+/**
+ * @param $pill
+ * @return string
+ */
+function renderSubMenuURL($pill) {
+    $path = "admin.php?page={$_GET['page']}&pill=$pill";
+    return admin_url($path);
 }

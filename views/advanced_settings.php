@@ -16,7 +16,6 @@
         <div class="col-md-2">
             <ul class="nav nav-pills nav-stacked">
                 <?php
-                $name = get_transient('errors');
                 $path = "admin.php?page={$_GET['page']}&pill=hubspot";
                 $hubspot_url = admin_url($path);
                 ?>
@@ -68,7 +67,7 @@
                     <input type="hidden" name="action" value="crmc_add_algolia_api_keys">
                     <input type="hidden" name="crmc_add_algolia_api_keys_nonce" value="<?php echo $crmc_add_algolia_api_keys_nonce ?>" />
                     <div class="form-group">
-                        <label for="hubspotAPIKey">Algolia Application Id</label>
+                        <label for="algoliaApplicationId">Algolia Application Id</label>
 
                         <?php
                         echo renderErrors($errors['crmc_algolia_application_id']);
@@ -76,7 +75,7 @@
                         <input type="text" value="<?php echo get_option('crmc_algolia_application_id'); ?>" class="form-control" id="algoliaApplicationId" name="crmc_algolia_application_id" placeholder="Algolia Application Id">
                     </div>
                     <div class="form-group">
-                        <label for="hubspotAPIKey">Algolia API Key</label>
+                        <label for="algoliaAPIKey">Algolia API Key</label>
 
                         <?php
                         echo renderErrors($errors['crmc_algolia_api_key']);

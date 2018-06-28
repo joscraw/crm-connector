@@ -25,8 +25,12 @@ define( 'PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 /*register_activation_hook( __FILE__, array( 'Akismet', 'plugin_activation' ) );
 register_deactivation_hook( __FILE__, array( 'Akismet', 'plugin_deactivation' ) );*/
 
+require_once(ABSPATH.'wp-admin/includes/upgrade.php');
 require_once( PLUGIN_DIR . 'includes/helpers.php' );
 require_once( PLUGIN_DIR . 'classes/CRMConnector.php' );
+require_once( PLUGIN_DIR . 'classes/DatabaseMigrationInitializer.php' );
 
+
+register_activation_hook(__FILE__, array( 'DatabaseMigrationInitializer', 'init' ));
 
 add_action( 'init', array( 'CRMConnector', 'init' ) );

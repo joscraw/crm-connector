@@ -19,7 +19,7 @@
             </li>
             <?php
             $slug = 'chapters';
-            $path = "admin.php?page=$slug";
+            $path = "admin.php?page=$slug&pill=list";
             $url = admin_url($path);
             ?>
             <li class="nav-item <?php echo ($_GET['page'] === $slug ? 'active' : ''); ?>">
