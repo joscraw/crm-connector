@@ -98,10 +98,17 @@
                 ?>
             <div class="row">
                 <div class="col-md-10 col-md-offset-2">
-                    <div class="form-group js-property">
-                        <label for="group">Property</label>
-                        <input type="text" class="form-control" name="groups[group_index][properties][property_index][property_name]" placeholder="Property Name">
-                        <input type="text" class="form-control" name="groups[group_index][properties][property_index][property_value]" placeholder="Property Value">
+                    <div class="form-group js-property" data-property="{{property_id}}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="group">Property Name</label>
+                                <input type="text" class="form-control js-property-name" name="groups[group_index][properties][property_index][property_name]" placeholder="Property Name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="group">Property Value</label>
+                                <input type="text" class="form-control js-property-value" name="groups[group_index][properties][property_index][property_value]" placeholder="Property Value">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -115,7 +122,6 @@
                             <button data-url="<?php echo admin_url('admin-ajax.php'); ?>" data-nonce="<?php echo wp_create_nonce( 'crmc_add_group_nonce' ); ?>" class="btn btn-default js-add-property-group" type="button">Add Property Group</button>
                         </div>
                         <div class="col-md-2">
-                            <button class="btn btn-primary pull-right" type="submit">Create</button>
                         </div>
                 </div>
 
@@ -146,10 +152,17 @@
                                     ?>
                                     <div class="row">
                                         <div class="col-md-10 col-md-offset-2">
-                                            <div class="form-group js-property">
-                                                <label for="group">Property</label>
-                                                <input type="text" class="form-control" value="<?php echo $property->property_name; ?>" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_name]" placeholder="Property Name">
-                                                <input type="text" class="form-control" value="<?php echo $property->property_value; ?>" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_value]" placeholder="Property Value">
+                                            <div class="form-group js-property" data-property="<?php echo $property->id; ?>">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label for="group">Property Name</label>
+                                                        <input type="text" class="form-control js-property-name" value="<?php echo $property->property_name; ?>" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_name]" placeholder="Property Name">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="group">Property Value</label>
+                                                        <input type="text" class="form-control js-property-value" value="<?php echo $property->property_value; ?>" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_value]" placeholder="Property Value">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

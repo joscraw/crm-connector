@@ -35,6 +35,9 @@ class CRMConnector
 
         add_action("wp_ajax_crmc_create_group", array( 'CRMConnector', 'create_group_action'));
         add_action("wp_ajax_crmc_create_property", array( 'CRMConnector', 'create_property_action'));
+        add_action("wp_ajax_crmc_set_group_name", array( 'CRMConnector', 'create_group_name_action'));
+        add_action("wp_ajax_crmc_set_property_name", array( 'CRMConnector', 'create_property_name_action'));
+        add_action("wp_ajax_crmc_set_property_value", array( 'CRMConnector', 'create_property_value_action'));
 
 
 
@@ -312,7 +315,9 @@ class CRMConnector
     }
 
 
-
+    /**
+     * Creates empty group in the database
+     */
     public static function create_group_action() {
 
         $groups_table = self::$wpdb->prefix.'groups';
@@ -329,6 +334,9 @@ class CRMConnector
     }
 
 
+    /**
+     * Creates empty property in the database
+     */
     public static function create_property_action() {
 
         $groups_table = self::$wpdb->prefix.'properties';
@@ -339,6 +347,63 @@ class CRMConnector
             'group_id' => $group,
         ));
 
+        $property_id = self::$wpdb->insert_id;
+
+        $result = [];
+        $result['type'] = "success";
+        $result['property_id'] = $property_id;
+        echo json_encode($result);
+        exit;
+    }
+
+
+    /**
+     * Adds/modifies an empty group name that has been created
+     */
+    public static function create_group_name_action() {
+
+        $groups_table = self::$wpdb->prefix.'groups';
+        $group_id = sanitize_key($_POST['group']);
+        $group_name = sanitize_text_field($_POST['group_name']);
+
+        self::$wpdb->query(self::$wpdb->prepare("UPDATE $groups_table set group_name= %s WHERE id= %s",$group_name, $group_id));
+
+        $result = [];
+        $result['type'] = "success";
+        echo json_encode($result);
+        exit;
+
+    }
+
+    /**
+     * Adds/modifies an empty property name that has been created
+     */
+    public static function create_property_name_action() {
+
+        $properties_table = self::$wpdb->prefix.'properties';
+        $group_id = sanitize_key($_POST['group']);
+        $property_name = sanitize_text_field($_POST['property_name']);
+        $property_id = sanitize_key($_POST['property_id']);
+
+        self::$wpdb->query(self::$wpdb->prepare("UPDATE $properties_table set property_name= %s WHERE group_id= %s and id= %s",$property_name, $group_id, $property_id));
+
+        $result = [];
+        $result['type'] = "success";
+        echo json_encode($result);
+        exit;
+    }
+
+    /**
+     * Adds/modifies an empty property value that has been created
+     */
+    public static function create_property_value_action() {
+
+        $properties_table = self::$wpdb->prefix.'properties';
+        $group_id = sanitize_key($_POST['group']);
+        $property_value = sanitize_text_field($_POST['property_value']);
+        $property_id = sanitize_key($_POST['property_id']);
+
+        self::$wpdb->query(self::$wpdb->prepare("UPDATE $properties_table set property_value= %s WHERE group_id= %s and id= %s",$property_value, $group_id, $property_id));
 
         $result = [];
         $result['type'] = "success";
