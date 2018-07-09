@@ -37,7 +37,8 @@ function renderGenericErrorMessage($errors)
  * @param $successMessage
  * @return string
  */
-function renderSuccessMessage($successMessage) {
+function renderSuccessMessage($successMessage)
+{
     if (!$successMessage) return;
     $html = "<div class='alert alert-success' role='alert'>$successMessage</div>";
     return $html;
@@ -47,7 +48,8 @@ function renderSuccessMessage($successMessage) {
 /**
  * Delete all transients so you don't get any message overlaps
  */
-function deleteTransients() {
+function deleteTransients()
+{
     delete_transient('errors');
     delete_transient('successMessage');
 }
@@ -57,7 +59,30 @@ function deleteTransients() {
  * @param $pill
  * @return string
  */
-function renderSubMenuURL($pill) {
+function renderSubMenuURL($pill)
+{
     $path = "admin.php?page={$_GET['page']}&pill=$pill";
     return admin_url($path);
+}
+
+
+/**
+ * @param $pill
+ * @return string
+ */
+function renderMenuURL($page)
+{
+    $path = "admin.php?page=$page";
+    return admin_url($path);
+}
+
+
+
+function redirectToPage($params = array())
+{
+    $query = http_build_query($params);
+    $path = "admin.php?$query";
+    $url = admin_url($path);
+    wp_redirect( $url );
+    exit();
 }

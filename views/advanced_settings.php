@@ -15,16 +15,9 @@
 
         <div class="col-md-2">
             <ul class="nav nav-pills nav-stacked">
-                <?php
-                $path = "admin.php?page={$_GET['page']}&pill=hubspot";
-                $hubspot_url = admin_url($path);
-                ?>
-                <li role="presentation" class="<?php echo ($_GET['pill'] === 'hubspot' ? 'active' : ''); ?>"><a href="<?php echo $hubspot_url; ?>">HubSpot</a></li>
-                <?php
-                $path = "admin.php?page={$_GET['page']}&pill=algolia";
-                $algolia_url = admin_url($path);
-                ?>
-                <li role="presentation" class="<?php echo ($_GET['pill'] === 'algolia' ? 'active' : ''); ?>"><a href="<?php echo $algolia_url; ?>">Algolia</a></li>
+                <li role="presentation" class="<?php echo (!isset($_GET['pill']) ? 'active' : ''); ?>"><a href="<?php echo renderMenuURL('advanced-settings'); ?>">General</a></li>
+                <li role="presentation" class="<?php echo ($_GET['pill'] === 'hubspot' ? 'active' : ''); ?>"><a href="<?php echo renderSubMenuURL('hubspot'); ?>">HubSpot</a></li>
+                <li role="presentation" class="<?php echo ($_GET['pill'] === 'algolia' ? 'active' : ''); ?>"><a href="<?php echo renderSubMenuURL('algolia'); ?>">Algolia</a></li>
             </ul>
         </div>
 
@@ -32,8 +25,15 @@
             <h1>Advanced Settings <small><?php echo isset($_GET['pill']) ? '/ ' . ucfirst($_GET['pill']) : ''; ?></small></h1>
 
             <?php
-            $name = get_transient('errors');
-            if($_GET['pill'] === 'hubspot'):
+            if(!isset($_GET['pill'])):
+                ?>
+
+                <button type="button" class="btn btn-danger">Sync CRM</button>
+
+
+            <?php
+                $name = get_transient('errors');
+            elseif($_GET['pill'] === 'hubspot'):
             // Generate a custom nonce value.
             $crmc_add_hubspot_api_key_nonce = wp_create_nonce( 'crmc_add_hubspot_api_key_nonce' );
             ?>
@@ -83,7 +83,25 @@
 
                         <input type="text" value="<?php echo get_option('crmc_algolia_api_key'); ?>" class="form-control" id="algoliaAPIKey" name="crmc_algolia_api_key" placeholder="Algolia API Key">
                     </div>
-                    <p class="help-block"><a href="https://www.algolia.com/api-keys">Here</a> to obtain your Application Id and API key</p>
+                    <div class="form-group">
+                        <label for="algoliaAPIKey">Algolia Index Name <small>(Don't change this value unless you know exactly what you are doing.)</small></label>
+
+                        <?php
+                        echo renderErrors($errors['crmc_algolia_index']);
+                        ?>
+
+                        <input type="text" value="<?php echo get_option('crmc_algolia_index'); ?>" class="form-control" id="algoliaIndex" name="crmc_algolia_index" placeholder="Algolia Index Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="searchOnlyAPIKey">Algolia Search Only API Key</label>
+
+                        <?php
+                        echo renderErrors($errors['crmc_algolia_search_only_api_key']);
+                        ?>
+
+                        <input type="text" value="<?php echo get_option('crmc_algolia_search_only_api_key'); ?>" class="form-control" id="searchOnlyAPIKey" name="crmc_algolia_search_only_api_key" placeholder="Algolia Search Only API Key">
+                    </div>
+                    <p class="help-block"><a href="https://www.algolia.com/api-keys">Here</a> to obtain your Algolia API Creds</p>
                     <button type="submit" class="btn btn-default">Submit</button>
                 </form>
             <?php
@@ -96,3 +114,5 @@
         </div>
     </div>
 </div>
+
+

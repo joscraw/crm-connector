@@ -12,3 +12,31 @@
 .nav {
     margin-bottom: 20px;
 }
+
+
+.ais-search-box {
+    max-width: none;
+}
+
+.ais-search-box--magnifier {
+    display:none;
+}
+
+.student-list-panel-body {
+    display: none;
+}
+
+.student-list-panel-heading {
+    cursor: pointer;
+}
+
+.student-list-panel-heading em, .student-list-panel-body em {
+    color: #A52A2A;
+    font-weight: bold;
+}
+
+
+.ais-search-box--reset {
+    top: 10px;
+    right: 10px;
+}

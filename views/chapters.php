@@ -2,26 +2,20 @@
 
     <?php
     global $wpdb;
-    $e = get_transient('errors');
     include('partials/nav.php');
     ?>
 
     <div class="row">
 
         <?php
-        $successMessage = get_transient('successMessage');
-        echo renderSuccessMessage($successMessage);
-        $e = get_transient('errors');
+        echo renderSuccessMessage(get_transient('successMessage'));
         echo renderGenericErrorMessage(get_transient('errors')['main']);
         ?>
 
 
         <div class="col-md-2">
             <ul class="nav nav-pills nav-stacked">
-                <?php
-                $name = get_transient('errors');
-                ?>
-                <li role="presentation" class="<?php echo ($_GET['pill'] === 'list' ? 'active' : ''); ?>"><a href="<?php echo renderSubMenuURL('list'); ?>">Chapters</a></li>
+                <li role="presentation" class="<?php echo (!isset($_GET['pill']) ? 'active' : ''); ?>"><a href="<?php echo renderMenuURL('chapters'); ?>">Chapters</a></li>
                 <li role="presentation" class="<?php echo ($_GET['pill'] === 'add' ? 'active' : ''); ?>"><a href="<?php echo renderSubMenuURL('add'); ?>">Add Chapter</a></li>
                 <li role="presentation" class="<?php echo ($_GET['pill'] === 'mapping' ? 'active' : ''); ?>"><a href="<?php echo renderSubMenuURL('mapping'); ?>">Chapter Mapping</a></li>
             </ul>
@@ -32,8 +26,7 @@
             <h1>Chapters <?php echo isset($_GET['pill']) ? '/ ' . str_replace('-', ' ', ucfirst($_GET['pill'])) : ''; ?></small></h1>
 
             <?php
-            $name = get_transient('errors');
-            if($_GET['pill'] === 'list'):
+            if(!isset($_GET['pill'])):
                 // Generate a custom nonce value.
                 $crmc_add_chapter_nonce = wp_create_nonce( 'crmc_add_chapter_nonce' );
 
@@ -52,7 +45,7 @@
                     foreach ($results as $instance) :
                 ?>
                     <tr>
-                        <td><?php echo $instance->chapter_name; ?> | <a href="">Add Students</a></td>
+                        <td><?php echo $instance->chapter_name; ?> <a class="btn btn-success" role="button" href="<?php echo renderMenuURL('import'); ?>&chapter_id=<?php echo $instance->id; ?>">Import Students</a></td>
                     </tr>
                 <?php
                     endforeach;
@@ -62,16 +55,11 @@
             elseif ($_GET['pill'] === 'add'):
                 // Generate a custom nonce value.
                 $crmc_add_chapter_nonce = wp_create_nonce( 'crmc_add_chapter_nonce' );
-                $errors = get_transient('errors');
                 ?>
                 <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
                     <input type="hidden" name="action" value="crmc_add_chapter">
                     <input type="hidden" name="crmc_add_chapter_nonce" value="<?php echo $crmc_add_chapter_nonce ?>" />
                     <div class="form-group">
-
-                        <?php
-                        $errors = get_transient('errors');
-                        ?>
 
                         <label for="hubspotAPIKey">Chapter Name</label>
                         <?php

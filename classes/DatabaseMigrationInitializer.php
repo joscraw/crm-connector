@@ -30,6 +30,8 @@ class DatabaseMigrationInitializer
         self::createChaptersTable();
         self::createGroupsTable();
         self::createGroupsMetaTable();
+        self::createJobsTable();
+        self::createDefaultImportMapping();
     }
 
 
@@ -81,6 +83,59 @@ class DatabaseMigrationInitializer
 		) $c";
 
         dbDelta(array($sql));
+
+    }
+
+
+    public static function createJobsTable()
+    {
+
+        $query = "CREATE TABLE %scrons (
+                  id mediumint(9) NOT NULL AUTO_INCREMENT,
+                  message tinytext,
+                  chapter_id mediumint(9),
+                  file_path varchar(255),
+                  PRIMARY KEY  (id)
+              ) %s";
+
+        $sql= sprintf($query, self::$table_prefix, self::$charset_collate);
+
+        dbDelta(array($sql));
+
+    }
+
+
+    /**
+     * The column name mapping used for storing student import file data.
+     * Changing these values is not recommended because you will have records in Algolia
+     * with different names from other records.
+     */
+    public static function createDefaultImportMapping()
+    {
+
+        $mapping = [
+            'Student Prefix',
+            'Student First Name',
+            'Student Middle Name',
+            'Student Last Name',
+            'Student Suffix',
+            'Campus Address One',
+            'Campus Address Two',
+            'Campus City',
+            'Campus State',
+            'Campus Zip Code',
+            'Permanent Address One',
+            'Permanent Address Two',
+            'Permanent City',
+            'Permanent State',
+            'Permanent Zip Code',
+            'Student Permanent Phone Number',
+            'Student Email',
+            'Student Mobile Phone',
+            'GPA'
+        ];
+
+        update_option('student_import_file_mapping', $mapping);
 
     }
 
