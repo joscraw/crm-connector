@@ -144,13 +144,24 @@
                     <div class="col-md-10 col-md-offset-2">
                         <div class="form-group js-property" data-property="{{property_id}}">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <label for="group">Property Name</label>
-                                    <input type="text" class="form-control js-property-name" name="groups[group_index][properties][property_index][property_name]" placeholder="Property Name">
+                                <div class="col-md-5">
+                                    <label for="group">Label</label>
+                                    <input type="text" class="form-control js-property-label" name="groups[group_index][properties][property_index][property_name]" placeholder="Property Label">
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="group">Property Value</label>
-                                    <input type="text" class="form-control js-property-value" name="groups[group_index][properties][property_index][property_value]" placeholder="Property Value">
+                                <div class="col-md-4">
+                                    <label for="group">Description</label>
+                                    <textarea class="form-control js-property-description" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_value]"><?php echo $property->description; ?></textarea>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="group">Data Type</label>
+                                    <select class="js-data-type form-control">
+                                        <option value="" disabled selected>Select an Option</option>
+                                        <option value="string">String</option>
+                                        <option value="number">Number</option>
+                                        <option value="date">Date</option>
+                                        <option value="datetime">Datetime</option>
+                                        <option value="enumeration">enumeration</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -164,7 +175,11 @@
                 <div class="row">
                     <div class="col-md-10">
                         <button data-url="<?php echo admin_url('admin-ajax.php'); ?>" data-nonce="<?php echo wp_create_nonce( 'crmc_add_group_nonce' ); ?>" class="btn btn-success js-add-property-group" type="button">Add Property Group</button>
-                        <button class="btn btn-primary js-sync-mapping-button" type="button">Sync Mapping To CRM</button>
+                        <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" style="display: inline-block">
+                            <button class="btn btn-primary js-sync-mapping-button" type="submit">Sync Mapping To CRM</button>
+                            <input type="hidden" name="action" value="crmc_sync_mapping_to_hubspot">
+                            <input type="hidden" name="crmc_sync_mapping_to_hubspot_nonce" value="<?php echo wp_create_nonce( 'crmc_sync_mapping_to_hubspot_nonce' ); ?>" />
+                        </form>
                     </div>
                     <div class="col-md-2">
                     </div>
@@ -174,9 +189,7 @@
                 <div class="row">
                     <div class="col-md-10 js-form-container" data-prototype-group-form="<?php echo htmlspecialchars($prototype_group_form);?>" data-prototype-property-form="<?php echo htmlspecialchars($prototype_property_form);?>">
 
-                        <form class="js-chapter-mapping-form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
-                            <input type="hidden" name="action" value="crmc_sync_mapping_to_hubspot">
-                            <input type="hidden" name="crmc_sync_mapping_to_hubspot_nonce" value="<?php echo wp_create_nonce( 'crmc_sync_mapping_to_hubspot_nonce' ); ?>" />
+                        <form>
 
                             <?php
                             global $wpdb;
@@ -189,7 +202,7 @@
 
                             <div class="form-group js-group">
                                 <label for="group">Group</label>
-                                <input type="text" class="form-control" value="<?php echo $group->group_name;?>" name="groups[<?php echo $i; ?>][group]" placeholder="Group Name">
+                                <input type="text" class="form-control" value="<?php echo $group->displayName;?>" name="groups[<?php echo $i; ?>][group]" placeholder="Group Name">
                                 <button class="btn btn-default js-add-property" data-group="<?php echo $group->id;?>" data-url="<?php echo admin_url('admin-ajax.php'); ?>" data-nonce="<?php echo wp_create_nonce( 'crmc_add_property_nonce' ); ?>" type="button">Add Property</button>
 
                                 <?php
@@ -204,13 +217,24 @@
                                     <div class="col-md-10 col-md-offset-2">
                                         <div class="form-group js-property" data-property="<?php echo $property->id; ?>">
                                             <div class="row">
-                                                <div class="col-md-6">
-                                                    <label for="group">Property Name</label>
-                                                    <input type="text" class="form-control js-property-name" value="<?php echo $property->property_name; ?>" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_name]" placeholder="Property Name">
+                                                <div class="col-md-5">
+                                                    <label for="group">Label</label>
+                                                    <input type="text" class="form-control js-property-label" value="<?php echo $property->label; ?>" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_name]" placeholder="Property Label">
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <label for="group">Property Value</label>
-                                                    <input type="text" class="form-control js-property-value" value="<?php echo $property->property_value; ?>" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_value]" placeholder="Property Value">
+                                                <div class="col-md-4">
+                                                    <label for="group">Description</label>
+                                                    <textarea class="form-control js-property-description" name="groups[<?php echo $i; ?>][properties][<?php echo $j; ?>][property_value]"><?php echo $property->description; ?></textarea>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label for="group">Data Type</label>
+                                                    <select class="js-data-type form-control">
+                                                        <option value="" disabled <?php echo ($property->type === null) ? "selected" : "";?>>Select an Option</option>
+                                                        <option value="string" <?php echo ($property->type === "string") ? "selected" : "";?>>String</option>
+                                                        <option value="number" <?php echo ($property->type === "number") ? "selected" : "";?>>Number</option>
+                                                        <option value="date" <?php echo ($property->type === "date") ? "selected" : "";?>>Date</option>
+                                                        <option value="datetime" <?php echo ($property->type === "datetime") ? "selected" : "";?>>Datetime</option>
+                                                        <option value="enumeration" <?php echo ($property->type === "enumeration") ? "selected" : "";?>>enumeration</option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>
@@ -328,14 +352,15 @@
         });
 
 
-        $(document).on('change', '.js-property-name', function() {
+        $(document).on('change', '.js-property-label', function() {
 
+            debugger;
             // the add property button inside each group has all the data attributes you need to modify the group name
             var $button = $(event.target).closest('.js-group').find('.js-add-property'),
                 nonce = $button.attr("data-nonce"),
                 url = $button.attr("data-url"),
                 group = $button.attr("data-group"),
-                property_name = $(event.target).val(),
+                label = $(event.target).val(),
                 property_id = $(event.target).closest('.js-property').data('property');
 
 
@@ -344,7 +369,7 @@
                 type : "post",
                 dataType : "json",
                 url : url,
-                data : {action: "crmc_set_property_name", nonce: nonce, group: group, property_name: property_name, property_id: property_id}
+                data : {action: "crmc_set_property_name", nonce: nonce, group: group, label: label, property_id: property_id}
             }).fail(function(r,status,jqXHR) {
                 console.log('failed');
             })
@@ -354,7 +379,7 @@
 
         });
 
-        $(document).on('change', '.js-property-value', function() {
+        $(document).on('change', '.js-property-description', function() {
 
             // the add property button inside each group has all the data attributes you need to modify the group name
             var $button = $(event.target).closest('.js-group').find('.js-add-property'),
@@ -370,6 +395,32 @@
                 dataType : "json",
                 url : url,
                 data : {action: "crmc_set_property_value", nonce: nonce, group: group, property_value: property_value, property_id: property_id}
+            }).fail(function(r,status,jqXHR) {
+                console.log('failed');
+            })
+                .done(function(r,status,jqXHR) {
+                    console.log('success');
+                });
+
+        });
+
+        $(document).on('change', '.js-data-type', function() {
+
+            debugger;
+            // the add property button inside each group has all the data attributes you need to modify the group name
+            var $button = $(event.target).closest('.js-group').find('.js-add-property'),
+                nonce = $button.attr("data-nonce"),
+                url = $button.attr("data-url"),
+                group = $button.attr("data-group"),
+                type = $(event.target).val(),
+                property_id = $(event.target).closest('.js-property').data('property');
+
+            // perform ajax request
+            jQuery.ajax({
+                type : "post",
+                dataType : "json",
+                url : url,
+                data : {action: "crmc_set_data_type", nonce: nonce, group: group, type: type, property_id: property_id}
             }).fail(function(r,status,jqXHR) {
                 console.log('failed');
             })
@@ -497,14 +548,6 @@
 
                 }.bind(this));
 
-        }.bind(this));
-
-        $(document).on('click', '.js-sync-mapping-button', function(event) {
-            debugger;
-            event.preventDefault();
-
-            var $form = $('.js-chapter-mapping-form');
-            $form.submit();
         }.bind(this));
 
     })(jQuery);

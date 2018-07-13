@@ -133,6 +133,7 @@ class Backend
         add_action("wp_ajax_crmc_set_group_name", array( $this, 'create_group_name_action'));
         add_action("wp_ajax_crmc_set_property_name", array( $this, 'create_property_name_action'));
         add_action("wp_ajax_crmc_set_property_value", array( $this, 'create_property_value_action'));
+        add_action("wp_ajax_crmc_set_data_type", array( $this, 'set_data_type_action'));
         add_action("wp_ajax_crmc_get_column_names", array( $this, 'get_column_names_action'));
         add_action('wp_ajax_crmc_import_contacts', array( $this, 'import_contacts_action'));
     }
@@ -474,14 +475,9 @@ class Backend
         global $wpdb;
         $groups_table = $wpdb->prefix.'groups';
         $wpdb->insert( $groups_table, array(
-            'group_name' => ""
+            'name' => "",
         ));
         $group_id = $wpdb->insert_id;
-
-        if($group_id)
-        {
-            $client = GuzzleFactory::get_mailchimp_instance();
-        }
 
         $result = [];
         $result['type'] = "success";
@@ -523,9 +519,10 @@ class Backend
         global $wpdb;
         $groups_table = $wpdb->prefix.'groups';
         $group_id = sanitize_key($_POST['group']);
-        $group_name = sanitize_text_field($_POST['group_name']);
+        $display_name = sanitize_text_field($_POST['group_name']);
+        $name = str_replace(" ", "_", strtolower($display_name));
 
-        $wpdb->query($wpdb->prepare("UPDATE $groups_table set group_name= %s WHERE id= %s",$group_name, $group_id));
+        $wpdb->query(sprintf("UPDATE $groups_table set name='%s', displayName='%s' WHERE id= %s",$name, $display_name, $group_id));
 
         $result = [];
         $result['type'] = "success";
@@ -542,10 +539,17 @@ class Backend
         global $wpdb;
         $properties_table = $wpdb->prefix.'properties';
         $group_id = sanitize_key($_POST['group']);
-        $property_name = sanitize_text_field($_POST['property_name']);
+        $label = sanitize_text_field($_POST['label']);
         $property_id = sanitize_key($_POST['property_id']);
+        $name = str_replace(" ", "_", strtolower($label));
 
-        $wpdb->query($wpdb->prepare("UPDATE $properties_table set property_name= %s WHERE group_id= %s and id= %s",$property_name, $group_id, $property_id));
+        $group_name = $wpdb->get_var( sprintf("SELECT name FROM %s%s WHERE id = %s",
+            $wpdb->prefix,
+            'groups',
+            $group_id
+            ));
+
+        $wpdb->query($wpdb->prepare("UPDATE $properties_table set name= %s, label= %s, groupName= %s WHERE group_id= %s and id= %s",$name, $label, $group_name, $group_id, $property_id));
 
         $result = [];
         $result['type'] = "success";
@@ -564,7 +568,23 @@ class Backend
         $property_value = sanitize_text_field($_POST['property_value']);
         $property_id = sanitize_key($_POST['property_id']);
 
-        $wpdb->query($wpdb->prepare("UPDATE $properties_table set property_value= %s WHERE group_id= %s and id= %s",$property_value, $group_id, $property_id));
+        $wpdb->query($wpdb->prepare("UPDATE $properties_table set description= %s WHERE group_id= %s and id= %s",$property_value, $group_id, $property_id));
+
+        $result = [];
+        $result['type'] = "success";
+        echo json_encode($result);
+        exit;
+    }
+
+    public function set_data_type_action()
+    {
+        global $wpdb;
+        $properties_table = $wpdb->prefix.'properties';
+        $group_id = sanitize_key($_POST['group']);
+        $type = sanitize_text_field($_POST['type']);
+        $property_id = sanitize_key($_POST['property_id']);
+
+        $wpdb->query($wpdb->prepare("UPDATE $properties_table set type= %s WHERE group_id= %s and id= %s",$type, $group_id, $property_id));
 
         $result = [];
         $result['type'] = "success";
@@ -793,107 +813,18 @@ class Backend
 
     public function sync_mapping_to_hubspot()
     {
-        deleteTransients();
-        $errors = [];
+
         global $wpdb;
-
-        if( !isset( $_POST['crmc_sync_mapping_to_hubspot_nonce'] ) || !wp_verify_nonce( $_POST['crmc_sync_mapping_to_hubspot_nonce'], 'crmc_sync_mapping_to_hubspot_nonce') )
-        {
-            $errors['main'][] = 'Invalid form submission.';
-        }
-
-
-        if(false === get_option('crmc_hubspot_api_key', false))
-        {
-            $errors['main'][] = 'You must enter in a HubSpot API Key before you can sync your mapping';
-        }
-
-        if(empty($_POST['groups']))
-        {
-            $errors['main'][] = 'You must create at least one group before you can sync your mapping';
-        }
-
-        foreach($_POST['groups'] as $group)
-        {
-            if(empty($group['group']))
-            {
-                $errors['main'][] = 'Each one of your groups must have a name before you can sync the chapter mapping';
-                break;
-            }
-
-            if(!empty($group['properties']))
-            {
-                foreach($group["properties"] as $property)
-                {
-                    if(empty($property['property_name']) || empty($property['property_value']))
-                    {
-                        $errors['main'][] = 'Each one of your properties must have both a name and a value before you can sync the chapter mapping';
-                        break;
-                    }
-                }
-            }
-        }
-
-        if(count($errors) > 0)
-        {
-            set_transient( 'errors', $errors, 10 );
-            redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "chapter_mapping");
-            exit;
-        }
-
-        // save the mapping to HubSpot for each Chapter Associated with the account
-        $hubspot = HubSpot::Instance(get_option('crmc_hubspot_api_key'));
-
-        $payload = [
-            'name' => "",
-            'displayName' => ""
-        ];
-
-        $update_company_payload = [
-            'displayName' => ""
-        ];
-
-        foreach($_POST['groups'] as $group)
-        {
-            $payload['name'] = str_replace(" ", "_", $group['group']);
-            $payload['displayName'] = $group['group'];
-            try
-            {
-                $response = $hubspot->getCompanyGroups();
-                $groups = json_decode((string) $response->getBody());
-
-                $matches = array_filter($groups, function($group) use($payload) {
-                    return $group->name === $payload['name'];
-                });
-
-                if(!empty($matches))
-                {
-                    $response = $hubspot->updateCompanyGroup(['displayName' => $payload['displayName']], $payload['name']);
-                }
-                else
-                {
-                    $response = $hubspot->createCompanyGroup($payload);
-                }
-            }
-            catch(\Exception $exception)
-            {
-                if($exception->getCode() === 409)
-                {
-                    $errors['main'][] = "Chapter with that name already exists";
-                }
-                set_transient( 'errors', $errors, 10 );
-                redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "chapter_mapping");
-                exit;
-            }
-                foreach($group["properties"] as $property)
-                {
-                    // if the property name exists then just udate and don't create
-                    //$property['property_name']
-                    //$property['property_value']
-                }
-            }
-
-
+        $results = $wpdb->get_results(sprintf("SELECT * FROM %s%s LEFT JOIN %s%s ON %s%s.id = %s%s.group_id",
+            $wpdb->prefix,
+            'groups',
+            $wpdb->prefix,
+            'properties',
+            $wpdb->prefix,
+            'groups',
+            $wpdb->prefix,
+            'properties'
+            ));
 
         set_transient( 'successMessage', 'Chapter mapping successfully synced to HubSpot', 10 );
         redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "chapter_mapping");

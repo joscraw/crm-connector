@@ -40,7 +40,10 @@ class CRMCDatabaseTables
         {
             $sql = "CREATE TABLE $group_table (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
-			group_name longtext,
+			name longtext,
+			displayName longtext,
+			displayOrder longtext,
+			hubspotDefined boolean,
 			PRIMARY KEY  (id)
 		) {$wpdb->get_charset_collate()}";
 
@@ -52,8 +55,12 @@ class CRMCDatabaseTables
             $sql = "CREATE TABLE $properties_table (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			group_id mediumint(9),
-			property_name tinytext,
-			property_value longtext,
+			name longtext,
+			label longtext,
+			description longtext,
+			groupName longtext,
+			type tinytext,
+			fieldType tinytext,
 			FOREIGN KEY (group_id) REFERENCES $group_table(id),
 			PRIMARY KEY  (id)
 		) {$wpdb->get_charset_collate()}";
