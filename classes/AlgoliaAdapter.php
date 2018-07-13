@@ -1,6 +1,8 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
+namespace CRMConnector;
+
+use Exception;
 
 /**
  * Class AlgoliaAdapter

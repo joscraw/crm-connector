@@ -1,7 +1,9 @@
 <?php
 
-require_once ('AlgoliaAdapter.php');
-require_once(PLUGIN_DIR . 'vendor/autoload.php');
+namespace CRMConnector;
+
+/*require_once ('AlgoliaAdapter.php');
+require_once(PLUGIN_DIR . 'vendor/autoload.php');*/
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -118,10 +120,13 @@ class CRMConnector
         wp_register_style('bootstrap-local', plugin_dir_url( __FILE__ ) . '../assets/bootstrap.min.css', array(), CRM_CONNECTOR_VERSION);
         wp_register_style( 'crm-connector.css', plugin_dir_url( __FILE__ ) . '../assets/crm-connector.css', array(), CRM_CONNECTOR_VERSION );
         wp_register_style( 'crm-connector.css', plugin_dir_url( __FILE__ ) . '../assets/crm-connector.css', array(), CRM_CONNECTOR_VERSION );
+        wp_register_style( 'font-awesome.css', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
+
 
         /*wp_enqueue_style('bootstrap');*/
         wp_enqueue_style('instant-search.css');
         wp_enqueue_style('bootstrap-local');
+        wp_enqueue_style('crm-connector.css');
         wp_enqueue_style('crm-connector.css');
     }
 

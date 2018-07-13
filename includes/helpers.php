@@ -18,11 +18,11 @@ function renderErrors($errors) {
 }
 
 
-function renderGenericErrorMessage($errors)
+function renderGenericErrorMessage($errors, $temp = false)
 {
     if (!is_array($errors)) return;
     $html = "";
-    $html .= "<div class='alert alert-danger' role='alert'>";
+    $html .= "<div class='alert alert-danger" . ($temp === false ? '' : ' temp'). " role='alert'>";
     foreach ($errors as $error) {
         $html .= "<p>$error</p>";
     }
@@ -78,11 +78,11 @@ function renderMenuURL($page)
 
 
 
-function redirectToPage($params = array())
+function redirectToPage($params = array(), $tab = null)
 {
     $query = http_build_query($params);
     $path = "admin.php?$query";
-    $url = admin_url($path);
+    $url = admin_url($path) . (($tab === null) ? '' : "#$tab");
     wp_redirect( $url );
     exit();
 }
