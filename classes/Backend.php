@@ -474,8 +474,9 @@ class Backend
     {
         global $wpdb;
         $groups_table = $wpdb->prefix.'groups';
+        $count = (int) $wpdb->get_var(sprintf("SELECT count(id) FROM $groups_table"));
         $wpdb->insert( $groups_table, array(
-            'name' => "",
+            'name' => "group_$count",
         ));
         $group_id = $wpdb->insert_id;
 
@@ -493,12 +494,15 @@ class Backend
     public function create_property_action()
     {
         global $wpdb;
-        $groups_table = $wpdb->prefix.'properties';
+        $property_table = $wpdb->prefix.'properties';
 
         $group = $_POST['group'];
 
-        $wpdb->insert( $groups_table, array(
+        $count = (int) $wpdb->get_var(sprintf("SELECT count(id) FROM $property_table WHERE group_id= %s",$group));
+
+        $wpdb->insert( $property_table, array(
             'group_id' => $group,
+            'name'  => "group_{$group}_property_{$count}"
         ));
 
         $property_id = $wpdb->insert_id;
@@ -520,9 +524,9 @@ class Backend
         $groups_table = $wpdb->prefix.'groups';
         $group_id = sanitize_key($_POST['group']);
         $display_name = sanitize_text_field($_POST['group_name']);
-        $name = str_replace(" ", "_", strtolower($display_name));
 
-        $wpdb->query(sprintf("UPDATE $groups_table set name='%s', displayName='%s' WHERE id= %s",$name, $display_name, $group_id));
+        $wpdb->query(sprintf("UPDATE $groups_table set displayName='%s' WHERE id= %s", $display_name, $group_id));
+
 
         $result = [];
         $result['type'] = "success";
@@ -541,15 +545,9 @@ class Backend
         $group_id = sanitize_key($_POST['group']);
         $label = sanitize_text_field($_POST['label']);
         $property_id = sanitize_key($_POST['property_id']);
-        $name = str_replace(" ", "_", strtolower($label));
 
-        $group_name = $wpdb->get_var( sprintf("SELECT name FROM %s%s WHERE id = %s",
-            $wpdb->prefix,
-            'groups',
-            $group_id
-            ));
+        $wpdb->query($wpdb->prepare("UPDATE $properties_table set label= %s WHERE group_id= %s and id= %s", $label, $group_id, $property_id));
 
-        $wpdb->query($wpdb->prepare("UPDATE $properties_table set name= %s, label= %s, groupName= %s WHERE group_id= %s and id= %s",$name, $label, $group_name, $group_id, $property_id));
 
         $result = [];
         $result['type'] = "success";
@@ -813,9 +811,28 @@ class Backend
 
     public function sync_mapping_to_hubspot()
     {
-
+        $errors = [];
         global $wpdb;
-        $results = $wpdb->get_results(sprintf("SELECT * FROM %s%s LEFT JOIN %s%s ON %s%s.id = %s%s.group_id",
+        $results = $wpdb->get_results(sprintf("
+              SELECT %s%s.id as group_id, %s%s.name as group_name, %s%s.displayName as 
+              group_display_name, %s%s.id as property_id, %s%s.name as property_name, %s%s.label as property_label, %s%s.description as property_description, 
+              %s%s.type as property_type FROM %s%s LEFT JOIN %s%s ON %s%s.id = %s%s.group_id",
+            $wpdb->prefix,
+            'groups',
+            $wpdb->prefix,
+            'groups',
+            $wpdb->prefix,
+            'groups',
+            $wpdb->prefix,
+            'properties',
+            $wpdb->prefix,
+            'properties',
+            $wpdb->prefix,
+            'properties',
+            $wpdb->prefix,
+            'properties',
+            $wpdb->prefix,
+            'properties',
             $wpdb->prefix,
             'groups',
             $wpdb->prefix,
@@ -826,11 +843,111 @@ class Backend
             'properties'
             ));
 
+
+        // save the mapping to HubSpot for each Chapter Associated with the account
+        $hubspot = HubSpot::Instance(get_option('crmc_hubspot_api_key'));
+        foreach($results as $result) {
+            try
+            {
+                $response = $hubspot->getCompanyGroups();
+                $groups = json_decode((string) $response->getBody());
+
+                $group_matches = array_filter($groups, function($group) use($result){
+                    return $group->name === $result->group_name;
+                });
+
+                // if the result name or display name are missing
+                // then skip to the next result
+                if(!$result->group_name || !$result->group_display_name)
+                {
+                    continue;
+                }
+
+                // the group already exists so update instead of insert
+                if(count($group_matches) !== 0)
+                {
+                    $response = $hubspot->updateCompanyGroup([
+                        'displayName' => $result->group_display_name
+                    ], $result->group_name);
+                }
+                else
+                {
+                    $response = $hubspot->createCompanyGroup([
+                        'name'  =>  $result->group_name,
+                        'displayName'   => $result->group_display_name
+                    ]);
+                }
+
+                if(!$result->property_label)
+                {
+                    continue;
+                }
+
+                $response = $hubspot->getAllCompanyProperties();
+                $properties = json_decode((string) $response->getBody());
+                $property_matches = array_filter($properties, function($property) use($result){
+                    return $property->name === $result->property_name;
+                });
+
+                if(count($property_matches) !== 0)
+                {
+                    $response = $hubspot->updateCompanyProperty([
+                        'name'  =>  $result->property_name,
+                        'label' => $result->property_label,
+                        'type'  => $result->property_type,
+                        'groupName' => $result->group_name,
+                        'description'   => $result->property_description
+                    ], $result->property_name);
+                }
+                else
+                {
+                    $response = $hubspot->createCompanyProperty([
+                        'name'  =>  $result->property_name,
+                        'label' => $result->property_label,
+                        'description'   => $result->property_description,
+                        'groupName' => $result->group_name,
+                        'type'  => $result->property_type
+                    ]);
+                }
+
+            }
+            catch(\Exception $exception)
+            {
+                $errors['main'][] = $this->exceptionMessageParser($exception->getMessage());
+                set_transient( 'errors', $errors, 10 );
+                redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "chapter_mapping");
+                exit;
+            }
+        }
+
         set_transient( 'successMessage', 'Chapter mapping successfully synced to HubSpot', 10 );
         redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "chapter_mapping");
         exit;
 
 
+    }
+
+    /**
+     * Try to make sense of all the log crazy error message sent back from exceptions
+     *
+     * @param $message
+     * @return mixed
+     */
+    private function exceptionMessageParser($message)
+    {
+        $message_map = [
+          'Property must have type set",' => 'Whoops! You forgot to set a Data Type one one or more of your Properties!'
+        ];
+
+        foreach($message_map as $key => $value)
+        {
+            if (strpos($message, $key) !== false)
+            {
+                return $message_map[$key];
+            }
+        }
+
+        return $message;
     }
 
     /**

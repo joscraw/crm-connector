@@ -148,10 +148,83 @@ class HubSpot
         return $response;
     }
 
+    /**
+     * @param $property_name
+     * @return mixed
+     */
+    public function getCompanyProperty($property_name)
+    {
+        $hubspot_client = GuzzleFactory::get_hubspot_instance();
 
+        $response = $hubspot_client->get(
+            sprintf('properties/v1/companies/properties/named/%s', $property_name),
+            [
+                'query' => [
+                    'hapikey'=> $this->api_key
+                ]
+            ]);
 
+        return $response;
+    }
 
+    /**
+     *
+     */
+    public function getAllCompanyProperties()
+    {
+        $hubspot_client = GuzzleFactory::get_hubspot_instance();
 
+        $response = $hubspot_client->get(
+            'properties/v1/companies/properties',
+            [
+                'query' => [
+                    'hapikey'=> $this->api_key
+                ]
+            ]);
+
+        return $response;
+    }
+
+    /**
+     * @param $payload
+     * @param $property_name
+     * @return mixed
+     */
+    public function updateCompanyProperty($payload, $property_name)
+    {
+        $hubspot_client = GuzzleFactory::get_hubspot_instance();
+
+        $response = $hubspot_client->put(
+            sprintf('properties/v1/companies/properties/named/%s', $property_name),
+            [
+                'json' => $payload,
+                'query' => [
+                    'hapikey'=> $this->api_key
+                ]
+            ]);
+
+        return $response;
+    }
+
+    /**
+     * @param $payload
+     * @return mixed
+     */
+    public function createCompanyProperty($payload)
+    {
+        $hubspot_client = GuzzleFactory::get_hubspot_instance();
+
+        $response = $hubspot_client->post(
+            'properties/v1/companies/properties',
+            [
+                'json' => $payload,
+                'query' => [
+                    'hapikey'=> $this->api_key
+                ]
+            ]);
+
+        return $response;
+    }
 
 
 }

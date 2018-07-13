@@ -48,13 +48,7 @@ echo $tab_contents;
         $('.nav-tabs a').on('shown.bs.tab', function (e) {
             window.location.hash = e.target.hash;
         });
-
-        if($('.alert.temp').length) {
-            setTimeout(function() {
-                $('.alert.temp').remove();
-            }, 3000);
-        }
-
+        
     })(jQuery);
 
 </script>
