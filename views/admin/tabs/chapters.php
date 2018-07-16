@@ -54,7 +54,7 @@
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <label for="fileColumnName">File Column Name</label>
-                                                    <input type="text" id="fileColumnName" class="form-control js-file-column-name" value="{{file_column_name}}" name="file_column_names[]" placeholder="File Column Name">
+                                                    <input type="text" id="fileColumnName" class="form-control js-file-column-name" value="{{file_column_name}}" name="file_column_names[]" placeholder="File Column Name" disabled>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="databaseColumnName">Database Column Name</label>
@@ -93,12 +93,61 @@
                     </div>
                 </div>
 
+                <div class="modal fade js-rollback-modal" id="rollbackModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header js-modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">Rollback Tool</h5>
+                                <div id="spinner" class="js-spinner"></div>
+
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body js-modal-body">
+                                <table class="table">
+                                    <tr>
+                                        <td>Number Of Students Imported</td>
+                                        <td>Date of Import</td>
+                                        <td>Rollback</td>
+                                    </tr>
+                                <?php
+                                global $wpdb;
+                                $results = $wpdb->get_results(sprintf("SELECT * FROM %s%s ORDER BY created_at DESC", $wpdb->prefix, "imports"));
+                                foreach ($results as $instance) :
+                                    $object_ids = unserialize($instance->algolia_object_ids);
+                                    ?>
+
+                                    <tr>
+                                        <td><?php echo count($object_ids);?></td>
+                                        <td><?php echo $instance->created_at;?></td>
+                                        <td>
+                                            <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+                                                <input type="hidden" name="action" value="crmc_rollback_import">
+                                                <input type="hidden" name="importId" value="<?php echo $instance->id;?>">
+                                                <input type="hidden" name="crmc_rollback_import_nonce" value="<?php echo wp_create_nonce( 'crmc_rollback_import_nonce' ); ?>" />
+                                                <button data-chapter="<?php echo $instance->id;?>" type="submit" class="btn btn-danger js-rollback-button" data-toggle="modal">Rollback This Import</button>
+                                            </form>
+                                            </td>
+                                    </tr>
+
+                                    <?php
+                                endforeach;
+                                ?>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <?php
                 ob_start();
                 ?>
                 <table class="table table-hover">
                     <tr>
                         <th>Chapter</th>
+                        <th>Import Students From Excel Spreadsheet</th>
+                        <th>Rollback to a Previous Import</th>
                     </tr>
 
                     <?php
@@ -108,7 +157,9 @@
                     ?>
 
                     <tr>
-                        <td><?php echo $instance->chapter_name; ?> <button data-chapter="<?php echo $instance->id;?>" type="button" class="btn btn-primary js-show-import-modal-button" data-toggle="modal">Import Students</button></td>
+                        <td><?php echo $instance->chapter_name; ?></td>
+                        <td><button data-chapter="<?php echo $instance->id;?>" type="button" class="btn btn-primary js-show-import-modal-button" data-toggle="modal">Import Students</button></td>
+                        <td><button data-chapter="<?php echo $instance->id;?>" type="button" class="btn btn-warning js-show-rollback-modal-button" data-toggle="modal">View Rollback Options</button></td>
                     </tr>
 
                     <?php
@@ -490,7 +541,7 @@
                         mapping = mapping.map(function(map){
                             return "<option value='"+map+"'>"+map+"</option>";
                         });
-
+                        mapping.unshift('<option value="" disabled selected>Select your option</option>');
                         prototype = prototype.replace(/\{\{database_column_names\}\}/g, mapping.join(''));
 
                         $form.append(prototype);
@@ -506,6 +557,17 @@
 
         $(document).on('click', '.js-import-students-button', function(event) {
 
+            var selected_database_columns = [];
+            $selects = $('.js-database-column-name');
+            $selects.each(function(index, select){
+                $select = $(select);
+               if($select.val())
+               {
+                  selected_database_columns.push(index);
+               }
+            });
+
+            debugger;
             event.preventDefault();
 
             debugger;
@@ -519,6 +581,7 @@
             formData.append('nonce', nonce);
             formData.append('action', 'crmc_import_contacts');
             formData.append('chapter_id', this.chapterId);
+            formData.append('selected_database_columns', JSON.stringify(selected_database_columns));
 
             // perform ajax request
             jQuery.ajax({
@@ -538,15 +601,23 @@
             })
                 .done(function(r,status,jqXHR) {
 
-                    debugger;
+                    $('.js-import-modal').animate({
+                        scrollTop: $('.js-import-modal').offset().top
+                    }, 200);
 
                     var response = JSON.parse(r);
-
                     this.ajaxRemoveLoadingSpinnerFromContainer(".js-import-modal .js-modal-body");
-
                     this.ajaxRenderNoticesAndErrors(response, ".js-import-modal .js-modal-body");
 
                 }.bind(this));
+
+        }.bind(this));
+
+        $(document).on('click', '.js-show-rollback-modal-button', function(event) {
+            var $modal = $('.js-rollback-modal');
+            $modal.modal('show');
+            this.chapterId = $(event.target).data('chapter');
+            debugger;
 
         }.bind(this));
 

@@ -143,8 +143,9 @@ class Backend
         add_action('admin_post_crmc_add_hubspot_api_key', array( $this, 'add_api_key_action'));
         add_action('admin_post_crmc_add_algolia_api_keys', array( $this, 'add_algolia_api_keys_action'));
         add_action('admin_post_crmc_add_chapter', array( $this, 'add_chapter_action'));
-        add_action('admin_post_crmc_add_chapter_mapping', array( $this, 'add_chapter_mapping_action'));
         add_action('admin_post_crmc_sync_mapping_to_hubspot', array($this, 'sync_mapping_to_hubspot'));
+        add_action('admin_post_crmc_rollback_import', array($this, 'crmc_rollback_import'));
+
     }
 
     private function getSettingsTabs() {
@@ -389,83 +390,14 @@ class Backend
 
         $tablename = $wpdb->prefix.'chapters';
         $wpdb->insert( $tablename, array(
-            'chapter_name' => $chapter_name
+            'chapter_name' => $chapter_name,
+            'created_at'    => (new \DateTime())->format("Y-m-d H:i:s")
         ));
 
         set_transient( 'successMessage', 'Chapter successfully created.', 10 );
         redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "create_chapter");
         exit;
     }
-
-
-    public function add_chapter_mapping_action()
-    {
-        deleteTransients();
-        $errors = [];
-
-        if( !isset( $_POST['crmc_add_chapter_mapping_nonce'] ) || !wp_verify_nonce( $_POST['crmc_add_chapter_mapping_nonce'], 'crmc_add_chapter_mapping_nonce') )
-        {
-            $errors['main'][] = 'Invalid form submission.';
-        }
-
-        if(!isset($_POST['groups']))
-        {
-            $errors['main'][] = 'You must add at least 1 Property Group before you can create!';
-        }
-
-        $groups_table = self::$wpdb->prefix.'groups';
-        $properties_table = self::$wpdb->prefix.'properties';
-        $groups = $_POST['groups'];
-        foreach($groups as $key => $value)
-        {
-            if(empty($value))
-            {
-                continue;
-            }
-
-            if(empty($value['group']))
-            {
-                $errors["groups[$key][group]"][] = 'You must enter a Chapter Name.';
-                continue;
-            }
-
-            self::$wpdb->insert( $groups_table, array(
-                'group_name' => $value['group']
-            ));
-            $last_inserted_group_id = self::$wpdb->insert_id;
-
-            if(empty($value['properties']) || !$last_inserted_group_id)
-            {
-                continue;
-            }
-
-            foreach($value['properties'] as $property)
-            {
-                if(empty($property['property_name']))
-                {
-                    continue;
-                }
-                self::$wpdb->insert( $properties_table, array(
-                    'group_id' => $last_inserted_group_id,
-                    'property_name' => $property['property_name'],
-                    'property_value' => $property['property_value'],
-                ));
-            }
-        }
-
-
-
-        if(count($errors) > 0)
-        {
-            set_transient( 'errors', $errors, 1 );
-            redirectToPage(array('page' => 'chapters','pill' => 'mapping'));
-            exit;
-        }
-
-        redirectToPage(array('page' => 'chapters','pill' => 'mapping'));
-        exit;
-    }
-
 
     /**
      * Creates empty group in the database
@@ -477,6 +409,7 @@ class Backend
         $count = (int) $wpdb->get_var(sprintf("SELECT count(id) FROM $groups_table"));
         $wpdb->insert( $groups_table, array(
             'name' => "group_$count",
+            'created_at'    => (new \DateTime())->format("Y-m-d H:i:s")
         ));
         $group_id = $wpdb->insert_id;
 
@@ -502,7 +435,8 @@ class Backend
 
         $wpdb->insert( $property_table, array(
             'group_id' => $group,
-            'name'  => "group_{$group}_property_{$count}"
+            'name'  => "group_{$group}_property_{$count}",
+            'created_at'    => (new \DateTime())->format("Y-m-d H:i:s")
         ));
 
         $property_id = $wpdb->insert_id;
@@ -611,6 +545,21 @@ class Backend
             $errors[] = 'Please add an excel file to import';
         }
 
+        if(empty($_POST['database_column_name']))
+        {
+            $errors[] = 'Please map at least one database column an excel spreadsheet column';
+        }
+
+        // check to make sure there are no duplicate mapped database column names
+        $dupe_array = array();
+        foreach ($_POST['database_column_name'] as $val) {
+
+            if (++$dupe_array[$val] > 1) {
+                $errors[] = 'You cannot use the same database column name twice!';
+                break;
+            }
+        }
+
         // Check the file MIME Type
         $supported_file_extensions = array(
             'xsl' => 'application/vnd.ms-excel',
@@ -659,7 +608,7 @@ class Backend
         {
             $result = $this->json_response();
             $result['type'] = "error";
-            $errors['errors'] = $errors;
+            $result['errors'] = $errors;
             echo json_encode($result);
             exit;
         }
@@ -695,12 +644,27 @@ class Backend
         //upload the data to algolia
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($upload_path);
         $rows = $spreadsheet->getActiveSheet()->toArray();
-        $records = [];
-        foreach($rows as $row)
+        $old_records = [];
+           foreach($rows as $row)
         {
             $record = array_combine($_POST['database_column_name'], $row);
+            $old_records[] = $record;
+        }
+
+        $records = [];
+        $selected_database_columns = json_decode($_POST['selected_database_columns']);
+
+        array_shift($rows);
+        foreach($rows as $row)
+        {
+            $record = [];
+            foreach($selected_database_columns as $key => $selectedDatabaseColumn)
+            {
+                $record[$_POST['database_column_name'][$key]] = $row[$selectedDatabaseColumn];
+            }
             $records[] = $record;
         }
+
 
         $algoliaAdapter = new AlgoliaAdapter(get_option('crmc_algolia_application_id'), get_option('crmc_algolia_api_key'), get_option('crmc_algolia_index'));
         try
@@ -715,6 +679,14 @@ class Backend
             echo json_encode($result);
             exit;
         }
+
+        $result = $wpdb->query(sprintf("INSERT INTO %s%s (algolia_object_ids, chapter_id, created_at) VALUES ('%s', '%s', CURRENT_TIMESTAMP)",
+            $wpdb->prefix,
+            'imports',
+            serialize($response['objectIDs']),
+            $chapter_id)
+        );
+
 
         $result = $this->json_response();
         $result['notices'] = ["File Imported Successfully"];
@@ -802,7 +774,7 @@ class Backend
         $student_import_file_mapping = get_option('student_import_file_mapping');
 
         $result = $this->json_response();
-        $result['notices'] = ["Column Names Loaded Successfully"];
+        $result['notices'] = ["Column Names Loaded Successfully", "Select as many or as few of the columns you would like to import."];
         $result['columns'] = $columnNames;
         $result['student_import_file_mapping'] = $student_import_file_mapping;
         echo json_encode($result);
@@ -846,6 +818,8 @@ class Backend
 
         // save the mapping to HubSpot for each Chapter Associated with the account
         $hubspot = HubSpot::Instance(get_option('crmc_hubspot_api_key'));
+        $groups_affected = 0;
+        $properties_affected = 0;
         foreach($results as $result) {
             try
             {
@@ -869,6 +843,7 @@ class Backend
                     $response = $hubspot->updateCompanyGroup([
                         'displayName' => $result->group_display_name
                     ], $result->group_name);
+                    $groups_affected++;
                 }
                 else
                 {
@@ -876,6 +851,7 @@ class Backend
                         'name'  =>  $result->group_name,
                         'displayName'   => $result->group_display_name
                     ]);
+                    $groups_affected++;
                 }
 
                 if(!$result->property_label)
@@ -898,6 +874,7 @@ class Backend
                         'groupName' => $result->group_name,
                         'description'   => $result->property_description
                     ], $result->property_name);
+                    $properties_affected++;
                 }
                 else
                 {
@@ -908,6 +885,7 @@ class Backend
                         'groupName' => $result->group_name,
                         'type'  => $result->property_type
                     ]);
+                    $properties_affected++;
                 }
 
             }
@@ -920,10 +898,73 @@ class Backend
             }
         }
 
+        if($properties_affected === 0 && $groups_affected === 0)
+        {
+            $errors['main'][] = 'You must add some Group or Property data before you sync!';
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "chapter_mapping");
+            exit;
+        }
+
         set_transient( 'successMessage', 'Chapter mapping successfully synced to HubSpot', 10 );
         redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "chapter_mapping");
         exit;
 
+
+    }
+
+    public function crmc_rollback_import()
+    {
+        deleteTransients();
+        $errors = [];
+        global $wpdb;
+
+        if( !isset( $_POST['crmc_rollback_import_nonce'] ) || !wp_verify_nonce( $_POST['crmc_rollback_import_nonce'], 'crmc_rollback_import_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if(!isset($_POST['importId']) || empty($_POST['importId']))
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if(count($errors) > 0)
+        {
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "all_chapters");
+            exit;
+        }
+
+        $importId = sanitize_key($_POST['importId']);
+
+        $result = $wpdb->get_var(sprintf("SELECT algolia_object_ids FROM %s%s WHERE id = %s", $wpdb->prefix, 'imports', $importId));
+
+        if(!$result)
+        {
+            $errors['main'][] = 'There was an error trying to rollback that import';
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "all_chapters");
+            exit;
+        }
+
+        $object_ids = unserialize($result);
+
+        $algoliaAdapter = new AlgoliaAdapter(get_option('crmc_algolia_application_id'), get_option('crmc_algolia_api_key'), get_option('crmc_algolia_index'));
+
+        if(!$algoliaAdapter->deleteObjects($object_ids))
+        {
+            $errors['main'][] = 'There was an error trying to rollback that import';
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "all_chapters");
+            exit;
+        }
+
+        $wpdb->query(sprintf("DELETE FROM %s%s WHERE id = %s", $wpdb->prefix, 'imports', $importId));
+
+        set_transient( 'successMessage', 'Rollack Successful', 10 );
+        redirectToPage(array('page' => 'crmc_settings','tab' => 'chapters'), "all_chapters");
+        exit;
 
     }
 

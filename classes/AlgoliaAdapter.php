@@ -10,7 +10,6 @@ use Exception;
  */
 class AlgoliaAdapter
 {
-
     private $client;
 
     private $index;
@@ -18,7 +17,6 @@ class AlgoliaAdapter
     private $applicationId;
 
     private $apiKey;
-
 
     /**
      * AlgoliaAdapter constructor.
@@ -42,9 +40,6 @@ class AlgoliaAdapter
 
     }
 
-
-
-
     /**
      * @param $objects
      * @param string $objectId
@@ -65,6 +60,21 @@ class AlgoliaAdapter
         return $response;
     }
 
+    /**
+     * @param $objectIds
+     * @return mixed|null
+     * @throws Exception
+     */
+    public function deleteObjects($objectIds)
+    {
+        try{
+            $this->index->deleteObjects($objectIds);
+        } catch(\Exception $exception) {
+            return false;
+        }
+
+        return true;
+    }
 
     /**
      * Handy function that lists out valid API keys associated with the account. We use this method to
@@ -85,7 +95,6 @@ class AlgoliaAdapter
         return $response;
 
     }
-
 
     /**
      * Default settings used for the index.
