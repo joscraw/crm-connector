@@ -43,7 +43,7 @@ class GuzzleFactory
         // Check if an instance exists with this key already
         if(null === self::$hubspot_client_instance)
         {
-            $a = array_merge(
+            $config = array_merge(
                 [
                     'base_uri' => 'https://api.hubapi.com',
                     'timeout'  => 2.0,
@@ -51,7 +51,7 @@ class GuzzleFactory
             );
 
             // instance doesn't exist yet, so create it
-            self::$hubspot_client_instance = new Client($a);
+            self::$hubspot_client_instance = new Client($config);
         }
 
         // Return the correct instance of this class
@@ -70,7 +70,7 @@ class GuzzleFactory
         // Check if an instance exists with this key already
         if(null === self::$mailchimp_client_instance)
         {
-            $a = array_merge(
+            $config = array_merge(
                 [
                     'base_uri' => 'http://httpbin.org',
                     'timeout'  => 2.0,
@@ -78,7 +78,7 @@ class GuzzleFactory
             );
 
             // instance doesn't exist yet, so create it
-            self::$mailchimp_client_instance = new Client($a);
+            self::$mailchimp_client_instance = new Client($config);
         }
 
         // Return the correct instance of this class

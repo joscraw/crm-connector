@@ -3,6 +3,11 @@
 namespace CRMConnector;
 
 
+use CRMConnector\Api\Exceptions\MessageParser;
+use CRMConnector\Api\MailChimp;
+use CRMConnector\Api\Models\CampaignDefaults;
+use CRMConnector\Api\Models\Contact;
+use CRMConnector\Api\Models\MailChimpList;
 use CRMConnector\Concerns\Renderable;
 use finfo;
 use CRMConnector\Utils\CRMCFunctions;
@@ -142,9 +147,11 @@ class Backend
     {
         add_action('admin_post_crmc_add_hubspot_api_key', array( $this, 'add_api_key_action'));
         add_action('admin_post_crmc_add_algolia_api_keys', array( $this, 'add_algolia_api_keys_action'));
+        add_action('admin_post_crmc_add_mailchimp_api_key', array( $this, 'add_mailchimp_api_key_action'));
         add_action('admin_post_crmc_add_chapter', array( $this, 'add_chapter_action'));
         add_action('admin_post_crmc_sync_mapping_to_hubspot', array($this, 'sync_mapping_to_hubspot'));
         add_action('admin_post_crmc_rollback_import', array($this, 'crmc_rollback_import'));
+        add_action('admin_post_crmc_add_list', array($this, 'add_list'));
 
     }
 
@@ -232,6 +239,70 @@ class Backend
 
         set_transient( 'successMessage', 'HubSpot API credentials successfully saved.', 1 );
         redirectToPage(array('page' => 'crmc_settings','tab' => 'advanced_settings'), "hubspot");
+        exit;
+    }
+
+    public function add_mailchimp_api_key_action()
+    {
+
+        deleteTransients();
+        $errors = [];
+
+        if( !isset( $_POST['crmc_add_mailchimp_api_key_nonce'] ) || !wp_verify_nonce( $_POST['crmc_add_mailchimp_api_key_nonce'], 'crmc_add_mailchimp_api_key_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if(!isset($_POST['crmc_mailchimp_api_key']) || !isset($_POST['crmc_mailchimp_username']))
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if(empty($_POST['crmc_mailchimp_api_key']))
+        {
+            $errors['crmc_mailchimp_api_key'][] = 'You must enter in an API Key';
+        }
+
+        if(empty($_POST['crmc_mailchimp_username']))
+        {
+            $errors['crmc_mailchimp_username'][] = 'You must enter your MailChimp Username';
+        }
+
+        if(count($errors) > 0)
+        {
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'advanced_settings'), "mailchimp");
+            exit;
+        }
+
+
+        $crmc_mailchimp_api_key = sanitize_text_field( $_POST['crmc_mailchimp_api_key']);
+        $crmc_mailchimp_username = sanitize_text_field( $_POST['crmc_mailchimp_username']);
+        $data_center = substr($crmc_mailchimp_api_key, strpos($crmc_mailchimp_api_key, "-") + 1);
+
+        $mailchimp_api = MailChimp::Instance(
+            $crmc_mailchimp_api_key,
+            $crmc_mailchimp_username,
+            $data_center
+        );
+
+        try
+        {
+            $mailchimp_api->ping();
+        }
+        catch(\Exception $exception)
+        {
+            $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'advanced_settings'), "mailchimp");
+            exit;
+        }
+
+        update_option('crmc_mailchimp_api_key', $crmc_mailchimp_api_key);
+        update_option('crmc_mailchimp_username', $crmc_mailchimp_username);
+
+        set_transient( 'successMessage', 'MailChimp API credentials successfully saved.', 10 );
+        redirectToPage(array('page' => 'crmc_settings','tab' => 'advanced_settings'), "mailchimp");
         exit;
     }
 
@@ -977,7 +1048,8 @@ class Backend
     private function exceptionMessageParser($message)
     {
         $message_map = [
-          'Property must have type set",' => 'Whoops! You forgot to set a Data Type one one or more of your Properties!'
+            'Property must have type set",'     =>  'Whoops! You forgot to set a Data Type one one or more of your Properties!',
+            'API Key Invalid'                   =>  'Whoopls, You need to enter in a valid API Key!',
         ];
 
         foreach($message_map as $key => $value)
@@ -994,12 +1066,36 @@ class Backend
     /**
      * @return array
      */
-    private function json_response() {
+    private function json_response()
+    {
         return [
             'type' => "success",
             'errors' => [],
             'notices' => [],
         ];
+    }
+
+    public function add_list()
+    {
+        $mailchimp_list = new MailChimpList();
+        $mailchimp_list->contact = new Contact();
+        $mailchimp_list->campaign_defaults = new CampaignDefaults();
+        $mailchimp_list->handle_request($_REQUEST);
+
+        $j = $mailchimp_list->toArray();
+
+        if($mailchimp_list->is_valid(true))
+        {
+            set_transient( 'successMessage', 'List Successfully Created', 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "create_list");
+            exit;
+        }
+
+
+        set_transient( 'errors', $mailchimp_list->errors(), 10 );
+        $field_params = $mailchimp_list->toArray();
+        redirectToPage((array('page' => 'crmc_settings','tab' => 'invitation_settings') + $field_params), "create_list");
+        exit;
     }
 
 }

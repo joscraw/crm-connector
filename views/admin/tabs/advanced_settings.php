@@ -50,7 +50,7 @@
 
                             <input type="text" value="<?php echo get_option('crmc_algolia_search_only_api_key'); ?>" class="form-control" id="searchOnlyAPIKey" name="crmc_algolia_search_only_api_key" placeholder="Algolia Search Only API Key">
                         </div>
-                        <p class="help-block"><a href="https://www.algolia.com/api-keys">Here</a> to obtain your Algolia API Creds</p>
+                        <p class="help-block"><a target="_blank" href="https://www.algolia.com/api-keys">Here</a> to obtain your Algolia API Creds</p>
                         <button type="submit" class="btn btn-default">Submit</button>
                     </form>
                 </div>
@@ -78,13 +78,44 @@
                             ?>
 
                             <input type="text" value="<?php echo get_option('crmc_hubspot_api_key'); ?>" class="form-control" id="hubspotAPIKey" name="crmc_hubspot_api_key" placeholder="Hubspot API Key">
-                            <p class="help-block"><a href="https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key">Here</a> for more info on how to obtain your API key</p>
+                            <p class="help-block"><a target="_blank" href="https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key">Here</a> for more info on how to obtain your API key</p>
                         </div>
                         <button type="submit" class="btn btn-default">Submit</button>
                     </form>
                 </div>
 
-                <div class="tab-pane" id="mailchimp">MailChimp</div>
+                <div class="tab-pane" id="mailchimp">
+
+                    <?php
+                    $errors = get_transient('errors');
+                    $crmc_add_mailchimp_api_key_nonce = wp_create_nonce( 'crmc_add_mailchimp_api_key_nonce' );
+                    ?>
+
+                    <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+                        <input type="hidden" name="action" value="crmc_add_mailchimp_api_key">
+                        <input type="hidden" name="crmc_add_mailchimp_api_key_nonce" value="<?php echo $crmc_add_mailchimp_api_key_nonce; ?>" />
+                        <div class="form-group">
+                            <label for="mailchimpUsername">Mailchimp Username</label>
+
+                            <?php
+                            echo renderErrors($errors['crmc_mailchimp_username']);
+                            ?>
+
+                            <input type="text" value="<?php echo get_option('crmc_mailchimp_username'); ?>" class="form-control" id="mailchimpUsername" name="crmc_mailchimp_username" placeholder="MailChimp Username">
+                        </div>
+                        <div class="form-group">
+                            <label for="mailchimpApiKey">Mailchimp API Key</label>
+
+                            <?php
+                            echo renderErrors($errors['crmc_mailchimp_api_key']);
+                            ?>
+
+                            <input type="text" value="<?php echo get_option('crmc_mailchimp_api_key'); ?>" class="form-control" id="mailchimpAPIKey" name="crmc_mailchimp_api_key" placeholder="MailChimp API Key">
+                            <p class="help-block"><a target="_blank" href="https://us1.admin.mailchimp.com/account/api/?_ga=2.194016621.1157657947.1531760872-769419101.1517934903">Here</a> to obtain your API Keys</p>
+                        </div>
+                        <button type="submit" class="btn btn-default">Submit</button>
+                    </form>
+                </div>
 
         </div>
     </div>
