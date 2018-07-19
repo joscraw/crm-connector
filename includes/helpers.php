@@ -86,3 +86,4 @@ function redirectToPage($params = array(), $tab = null)
     wp_redirect( $url );
     exit();
 }
+

@@ -7,7 +7,7 @@ namespace CRMConnector\Api\Models;
  * Class Contact
  * @package CRMConnector\Api\Models
  */
-class Contact
+class Contact implements \JsonSerializable
 {
 
     /**
@@ -99,6 +99,28 @@ class Contact
      * @return array
      */
     public function toArray()
+    {
+        return [
+            'company'   => $this->company,
+            'address1'  => $this->address1,
+            'address2'  => $this->address2,
+            'city'      => $this->city,
+            'state'     => $this->state,
+            'zip'       => $this->zip,
+            'country'   => $this->country,
+            'phone'     => $this->phone,
+
+        ];
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    function jsonSerialize()
     {
         return [
             'company'   => $this->company,

@@ -7,6 +7,8 @@ use CRMConnector\Api\Exceptions\MessageParser;
 use CRMConnector\Api\MailChimp;
 use CRMConnector\Api\Models\CampaignDefaults;
 use CRMConnector\Api\Models\Contact;
+use CRMConnector\Api\Models\MailChimp\Creds;
+use CRMConnector\Api\Models\MailChimp\GetListsResponse;
 use CRMConnector\Api\Models\MailChimpList;
 use CRMConnector\Concerns\Renderable;
 use finfo;
@@ -81,6 +83,8 @@ class Backend
 
     public function crmc_settings()
     {
+        global $wpdb;
+
         $current_tab = array_filter($this->getSettingsTabs(), function($tab) {
            return isset($_GET['tab']) && $_GET['tab'] == $tab['url'];
         });
@@ -106,7 +110,35 @@ class Backend
                 break;
 
             case "invitation_settings":
-                $tab_contents = $this->render('admin/tabs/invitation_settings');
+
+                $creds = new Creds;
+                $creds->api_key = get_option('crmc_mailchimp_api_key', null);
+                $creds->username = get_option('crmc_mailchimp_username', null);
+
+                $mailchimp_api = MailChimp::instance();
+                $response = null;
+                try
+                {
+                    $response = $mailchimp_api->get_lists($creds);
+                }
+                catch(\Exception $exception)
+                {
+                    $name = "Josh";
+                }
+
+                if($response)
+                {
+                    $body = (string) $response->getBody();
+                    $lists = json_decode($body, true);
+                    $response = new GetListsResponse;
+                    $response->fromArray($lists);
+                    $lists_response = $response->toArray();
+                }
+
+
+                $tab_contents = $this->render('admin/tabs/invitation_settings', array(
+                    'lists_response' => $lists_response
+                ));
                 break;
         }
 
@@ -152,6 +184,8 @@ class Backend
         add_action('admin_post_crmc_sync_mapping_to_hubspot', array($this, 'sync_mapping_to_hubspot'));
         add_action('admin_post_crmc_rollback_import', array($this, 'crmc_rollback_import'));
         add_action('admin_post_crmc_add_list', array($this, 'add_list'));
+        add_action('admin_post_crmc_remove_list', array($this, 'remove_list'));
+        add_action('admin_post_crmc_edit_list', array($this, 'edit_list'));
 
     }
 
@@ -278,17 +312,15 @@ class Backend
 
         $crmc_mailchimp_api_key = sanitize_text_field( $_POST['crmc_mailchimp_api_key']);
         $crmc_mailchimp_username = sanitize_text_field( $_POST['crmc_mailchimp_username']);
-        $data_center = substr($crmc_mailchimp_api_key, strpos($crmc_mailchimp_api_key, "-") + 1);
 
-        $mailchimp_api = MailChimp::Instance(
-            $crmc_mailchimp_api_key,
-            $crmc_mailchimp_username,
-            $data_center
-        );
+        $mailchimp_api = MailChimp::Instance();
+        $creds = new Creds;
+        $creds->api_key = $crmc_mailchimp_api_key;
+        $creds->username = $crmc_mailchimp_username;
 
         try
         {
-            $mailchimp_api->ping();
+            $mailchimp_api->ping($creds);
         }
         catch(\Exception $exception)
         {
@@ -1077,20 +1109,47 @@ class Backend
 
     public function add_list()
     {
+        deleteTransients();
+        $errors = [];
+
+        if( !isset( $_POST['crmc_add_list_nonce'] ) || !wp_verify_nonce( $_POST['crmc_add_list_nonce'], 'crmc_add_list_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "create_list");
+            exit;
+        }
+
         $mailchimp_list = new MailChimpList();
         $mailchimp_list->contact = new Contact();
         $mailchimp_list->campaign_defaults = new CampaignDefaults();
         $mailchimp_list->handle_request($_REQUEST);
 
-        $j = $mailchimp_list->toArray();
-
         if($mailchimp_list->is_valid(true))
         {
+            $creds = new Creds;
+            $creds->api_key = get_option('crmc_mailchimp_api_key', null);
+            $creds->username = get_option('crmc_mailchimp_username', null);
+
+            $mailchimp_api = MailChimp::instance();
+            try
+            {
+                $mailchimp_api->create_list($creds, $mailchimp_list);
+            }
+            catch(\Exception $exception)
+            {
+                $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+                set_transient( 'errors', $errors, 10 );
+                $field_params = $mailchimp_list->toArray();
+                redirectToPage((array('page' => 'crmc_settings','tab' => 'invitation_settings') + $field_params), "create_list");
+                exit;
+            }
+
             set_transient( 'successMessage', 'List Successfully Created', 10 );
             redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "create_list");
             exit;
         }
-
 
         set_transient( 'errors', $mailchimp_list->errors(), 10 );
         $field_params = $mailchimp_list->toArray();
@@ -1098,4 +1157,127 @@ class Backend
         exit;
     }
 
+    public function remove_list()
+    {
+        deleteTransients();
+        $errors = [];
+
+        if( !isset( $_POST['crmc_remove_list_nonce'] ) || !wp_verify_nonce( $_POST['crmc_remove_list_nonce'], 'crmc_remove_list_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if(!isset($_POST['list_id']) || empty($_POST['list_id']))
+        {
+            $errors['main'][] = "Problem removing the List";
+        }
+
+        if(count($errors) > 0)
+        {
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "lists");
+            exit;
+        }
+
+
+        $creds = new Creds;
+        $creds->api_key = get_option('crmc_mailchimp_api_key', null);
+        $creds->username = get_option('crmc_mailchimp_username', null);
+
+        $mailchimp_api = MailChimp::instance();
+        try
+        {
+            $response = $mailchimp_api->remove_list($creds, $_POST['list_id']);
+        }
+        catch(\Exception $exception)
+        {
+            $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "lists");
+            exit;
+        }
+
+        set_transient( 'successMessage', 'List Successfully Removed', 10 );
+        redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "lists");
+        exit;
+    }
+
+    public function edit_list()
+    {
+        deleteTransients();
+        $errors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+            if( !isset( $_GET['crmc_edit_list_nonce'] ) || !wp_verify_nonce( $_GET['crmc_edit_list_nonce'], 'crmc_edit_list_nonce') )
+            {
+                $errors['main'][] = 'Invalid form submission.';
+            }
+
+            if(!isset($_GET['list_id']) || empty($_GET['list_id']))
+            {
+                $errors['main'][] = "Problem trying to edit the List";
+            }
+
+            if(count($errors) > 0)
+            {
+                set_transient( 'errors', $errors, 10 );
+                redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "lists");
+                exit;
+            }
+
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings', 'list_id' => $_GET['list_id']), "edit_list");
+            exit;
+
+        }
+
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            if( !isset( $_POST['crmc_edit_list_nonce'] ) || !wp_verify_nonce( $_POST['crmc_edit_list_nonce'], 'crmc_edit_list_nonce') )
+            {
+                $errors['main'][] = 'Invalid form submission.';
+
+                set_transient( 'errors', $errors, 10 );
+                redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings', 'list_id' => $_POST['list_id']), "edit_list");
+                exit;
+            }
+
+            $mailchimp_list = new MailChimpList();
+            $mailchimp_list->contact = new Contact();
+            $mailchimp_list->campaign_defaults = new CampaignDefaults();
+            $mailchimp_list->handle_request($_REQUEST);
+
+            if($mailchimp_list->is_valid(true))
+            {
+                $creds = new Creds;
+                $creds->api_key = get_option('crmc_mailchimp_api_key', null);
+                $creds->username = get_option('crmc_mailchimp_username', null);
+
+                $mailchimp_api = MailChimp::instance();
+                try
+                {
+                    $mailchimp_api->edit_list($creds, $mailchimp_list, $_POST['list_id']);
+                }
+                catch(\Exception $exception)
+                {
+                    $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+                    set_transient( 'errors', $errors, 10 );
+                    $field_params = $mailchimp_list->toArray();
+                    redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings', 'list_id' => $_POST['list_id']), "edit_list");
+                    exit;
+                }
+
+                set_transient( 'successMessage', 'List Successfully Updated!', 10 );
+                redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings', 'list_id' => $_POST['list_id']), "edit_list");
+                exit;
+            }
+
+            set_transient( 'errors', $mailchimp_list->errors(), 10 );
+            $field_params = $mailchimp_list->toArray();
+            redirectToPage((array('page' => 'crmc_settings','tab' => 'invitation_settings', 'list_id' => $_POST['list_id']) + $field_params), "edit_list");
+            exit;
+
+        }
+    }
 }

@@ -6,7 +6,7 @@ namespace CRMConnector\Api\Models;
  * Class CampaignDefaults
  * @package CRMConnector\Api\Models
  */
-class CampaignDefaults
+class CampaignDefaults implements \JsonSerializable
 {
 
     /**
@@ -45,6 +45,23 @@ class CampaignDefaults
      * @return array
      */
     public function toArray()
+    {
+        return [
+            'from_name'     => $this->from_name,
+            'from_email'    => $this->from_email,
+            'subject'       => $this->subject,
+            'language'      => $this->language,
+        ];
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    function jsonSerialize()
     {
         return [
             'from_name'     => $this->from_name,

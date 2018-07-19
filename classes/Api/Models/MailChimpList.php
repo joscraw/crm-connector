@@ -7,7 +7,7 @@ namespace CRMConnector\Api\Models;
  * Class MailChimpList
  * @package CRMConnector\Api\Models
  */
-class MailChimpList
+class MailChimpList implements \JsonSerializable
 {
 
     /**
@@ -64,7 +64,7 @@ class MailChimpList
      * @see https://kb.mailchimp.com/lists/growth/how-to-change-list-name-and-defaults?utm_source=mc-api&utm_medium=docs&utm_campaign=apidocs&_ga=2.220936408.1157657947.1531760872-769419101.1517934903#Change-Subscription-Settings
      * @var boolean
      */
-    private $email_type_option;
+    private $email_type_option = true;
 
     /**
      * Whether this list is public or private. Possible Values: pub|prv
@@ -108,9 +108,28 @@ class MailChimpList
     {
         return [
             'name'                  =>  $this->name,
-            'permission_reminder'   => $this->permission_reminder,
+            'permission_reminder'   =>  $this->permission_reminder,
+            'email_type_option'     =>  $this->email_type_option,
             'contact'               =>  $this->contact->toArray(),
             'campaign_defaults'     =>  $this->campaign_defaults->toArray(),
+        ];
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    function jsonSerialize()
+    {
+        return [
+            'name'                  =>  $this->name,
+            'permission_reminder'   =>  $this->permission_reminder,
+            'email_type_option'     =>  $this->email_type_option,
+            'contact'               =>  $this->contact,
+            'campaign_defaults'     =>  $this->campaign_defaults,
         ];
     }
 
@@ -184,7 +203,4 @@ class MailChimpList
         }
         return $this;
     }
-
-
-
 }
