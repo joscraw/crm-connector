@@ -2,6 +2,8 @@
 
 namespace CRMConnector;
 
+use CRMConnector\Utils\CRMCFunctions;
+
 class DatabaseMigrationInitializer
 {
     private static $initiated = false;
@@ -134,6 +136,8 @@ class DatabaseMigrationInitializer
             'Student Mobile Phone',
             'GPA'
         ];
+
+        $mapping = file_get_contents(CRMCFunctions::plugin_dir() . '/config/default_column_names.csv');
 
         update_option('student_import_file_mapping', $mapping);
 

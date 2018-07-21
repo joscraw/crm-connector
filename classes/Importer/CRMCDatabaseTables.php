@@ -4,6 +4,7 @@
 namespace CRMConnector\Importer;
 
 use CRMConnector\Support\DatabaseTables;
+use CRMConnector\Utils\CRMCFunctions;
 
 /**
  * Class CRMCDatabaseTables
@@ -86,34 +87,10 @@ class CRMCDatabaseTables
             DatabaseTables::create($sql);
         }
 
-
-
-        $mapping = [
-            'Student Prefix',
-            'Student First Name',
-            'Student Middle Name',
-            'Student Last Name',
-            'Student Suffix',
-            'Campus Address One',
-            'Campus Address Two',
-            'Campus City',
-            'Campus State',
-            'Campus Zip Code',
-            'Permanent Address One',
-            'Permanent Address Two',
-            'Permanent City',
-            'Permanent State',
-            'Permanent Zip Code',
-            'Student Permanent Phone Number',
-            'Student Email',
-            'Student Mobile Phone',
-            'GPA'
-        ];
+        $mapping = explode(",", file_get_contents(CRMCFunctions::plugin_dir() . '/config/default_column_names.csv'));
 
         update_option('student_import_file_mapping', $mapping);
 
     }
-
-
 
 }

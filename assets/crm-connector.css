@@ -22,9 +22,6 @@
     display:none;
 }
 
-.student-list-panel-body {
-    display: none;
-}
 
 .student-list-panel-heading {
     cursor: pointer;

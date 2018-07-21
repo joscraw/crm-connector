@@ -663,6 +663,11 @@ class Backend
             }
         }
 
+        // check to make sure that a student email has been added to the import
+        if(!in_array('Personal Email', $_POST['database_column_name']))
+            $errors[] = 'You must map an email address!';
+
+
         // Check the file MIME Type
         $supported_file_extensions = array(
             'xsl' => 'application/vnd.ms-excel',
@@ -697,12 +702,12 @@ class Backend
             $errors[] = 'Exceeded filesize limit.';
         }
 
-        $chapter_id = $wpdb->get_var(sprintf("SELECT id FROM %schapters WHERE id = '%s'",
+        $results = $wpdb->get_results(sprintf("SELECT id, chapter_name FROM %schapters WHERE id = '%s'",
             $wpdb->prefix,
             $_POST['chapter_id']
         ));
 
-        if(null === $chapter_id)
+        if(empty($results))
         {
             $errors[] = 'That chapter does not exist.';
         }
@@ -715,6 +720,9 @@ class Backend
             echo json_encode($result);
             exit;
         }
+
+        $chapter_id = $results[0]->id;
+        $chapter_name = $results[0]->chapter_name;
 
         $upload_path = sprintf(
             '%s%s/%s',
@@ -747,12 +755,6 @@ class Backend
         //upload the data to algolia
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($upload_path);
         $rows = $spreadsheet->getActiveSheet()->toArray();
-        $old_records = [];
-           foreach($rows as $row)
-        {
-            $record = array_combine($_POST['database_column_name'], $row);
-            $old_records[] = $record;
-        }
 
         $records = [];
         $selected_database_columns = json_decode($_POST['selected_database_columns']);
@@ -761,6 +763,8 @@ class Backend
         foreach($rows as $row)
         {
             $record = [];
+            $record['chapter_name'] = $chapter_name;
+            $record['chapter_id'] = $chapter_id;
             foreach($selected_database_columns as $key => $selectedDatabaseColumn)
             {
                 $record[$_POST['database_column_name'][$key]] = $row[$selectedDatabaseColumn];

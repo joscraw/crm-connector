@@ -1,40 +1,54 @@
 <!-- Add this to your HTML document -->
 <script type="text/html" id="hit-template">
     <div class="panel panel-default">
-        <div class="js-panel-heading student-list-panel-heading panel-heading">{{Student Prefix}} {{{_highlightResult.Student First Name.value}}} {{Student Middle Name}} {{{_highlightResult.Student Last Name.value}}} {{Student Suffix}}</div>
+        <div class="js-panel-heading student-list-panel-heading panel-heading">{{First Name}} {{Last Name}} {{Personal Email}}</div>
         <div class="js-panel-body panel-body student-list-panel-body table-responsive">
             <table class="table table-striped">
-                <tr>
-                    <th>Campus Address One</th>
-                    <th>Campus Address Two</th>
-                    <th>Campus City</th>
-                    <th>Campus State</th>
-                    <th>Campus Zip Code</th>
-                    <th>Permanent Address One</th>
-                    <th>Permanent Address Two</th>
-                    <th>Permanent City</th>
-                    <th>Permanent State</th>
-                    <th>Permanent Zipcode</th>
-                    <th>Student Permanent Phone Number</th>
-                    <th>Student Email</th>
-                    <th>Student Mobile Phone</th>
-                    <th>GPA</th>
+                <tr class="js-column-names">
+                    <th>{{data_name_0}}</th>
+                    <th>{{data_name_1}}</th>
+                    <th>{{data_name_2}}</th>
+                    <th>{{data_name_3}}</th>
+                    <th>{{data_name_4}}</th>
+                    <th>{{data_name_5}}</th>
+                    <th>{{data_name_6}}</th>
+                    <th>{{data_name_7}}</th>
+                    <th>{{data_name_8}}</th>
+                    <th>{{data_name_9}}</th>
+                    <th>{{data_name_10}}</th>
+                    <th>{{data_name_11}}</th>
+                    <th>{{data_name_12}}</th>
+                    <th>{{data_name_13}}</th>
+                    <th>{{data_name_14}}</th>
+                    <th>{{data_name_15}}</th>
+                    <th>{{data_name_16}}</th>
+                    <th>{{data_name_17}}</th>
+                    <th>{{data_name_18}}</th>
+                    <th>{{data_name_19}}</th>
+                    <th>{{data_name_20}}</th>
                 </tr>
-                <tr>
-                    <td>{{{_highlightResult.Campus Address One.value}}}</td>
-                    <td>{{{_highlightResult.Campus Address Two.value}}}</td>
-                    <td>{{{_highlightResult.Campus City.value}}}</td>
-                    <td>{{{_highlightResult.Campus State.value}}}</td>
-                    <td>{{{_highlightResult.Campus Zip Code.value}}}</td>
-                    <td>{{{_highlightResult.Permanent Address One.value}}}</td>
-                    <td>{{{_highlightResult.Permanent Address Two.value}}}</td>
-                    <td>{{{_highlightResult.Permanent City.value}}}</td>
-                    <td>{{{_highlightResult.Permanent State.value}}}</td>
-                    <td>{{{_highlightResultPermanent Zipcode.value}}}</td>
-                    <td>{{{_highlightResult.Student Permanent Phone Number.value}}}</td>
-                    <td>{{{_highlightResult.Student Email.value}}}</td>
-                    <td>{{{_highlightResult.Student Mobile Phone.value}}}</td>
-                    <td>{{GPA}}</td>
+                <tr class="js-column-values">
+                    <td>{{data_value_0}}</td>
+                    <td>{{data_value_1}}</td>
+                    <td>{{data_value_2}}</td>
+                    <td>{{data_value_3}}</td>
+                    <td>{{data_value_4}}</td>
+                    <td>{{data_value_5}}</td>
+                    <td>{{data_value_6}}</td>
+                    <td>{{data_value_7}}</td>
+                    <td>{{data_value_8}}</td>
+                    <td>{{data_value_9}}</td>
+                    <td>{{data_value_10}}</td>
+                    <td>{{data_value_11}}</td>
+                    <td>{{data_value_12}}</td>
+                    <td>{{data_value_13}}</td>
+                    <td>{{data_value_14}}</td>
+                    <td>{{data_value_15}}</td>
+                    <td>{{data_value_16}}</td>
+                    <td>{{data_value_17}}</td>
+                    <td>{{data_value_18}}</td>
+                    <td>{{data_value_19}}</td>
+                    <td>{{data_value_20}}</td>
                 </tr>
             </table>
         </div>
@@ -69,7 +83,7 @@
     this.appId = this.$element.data('app-id');
     this.indexName = this.$element.data('index-name');
 
-    var search = instantsearch({
+    window.search = instantsearch({
         // Replace with your own values
         appId: this.appId,
         apiKey: this.searchOnlyApiKey, // search only API key, no ADMIN key
@@ -85,6 +99,24 @@
         var errorMessage = error.message.replace(/<\/?[^>]+(>|$)/g, "");
         errorMessage += " - Check to make sure the the Algolia API Settings are correct";
         this.$element.prepend(this.getError(errorMessage));
+    }.bind(this));
+
+    search.on('render', function (obj) {
+
+        $('.js-column-names th').each(function(index, value){
+            if($(value).html() === "")
+            {
+                $(value).remove();
+            }
+        });
+
+        $('.js-column-values td').each(function(index, value){
+            if($(value).html() === "")
+            {
+                $(value).remove();
+            }
+        });
+
     }.bind(this));
 
     search.addWidget(
@@ -103,6 +135,30 @@
     search.addWidget(
         instantsearch.widgets.hits({
             container: '#hits',
+            transformData: function(obj)
+            {
+                debugger;
+                var keys_to_skip = ['objectID', '_highlightResult', '__hitIndex', 'chapter_id'];
+                var expected_keys = ['First Name', 'Last Name', 'Personal Email'];
+                var results_obj = {};
+                var i = 0;
+                for(var key in obj)
+                {
+                    if(obj[key])
+                    {
+                        if(keys_to_skip.indexOf(key) !== -1)
+                            continue;
+
+                        if(expected_keys.indexOf(key) !== -1)
+                            results_obj[key] = obj[key];
+
+                        results_obj['data_name_' + i] = key;
+                        results_obj['data_value_' + i] = obj[key];
+                    }
+                    i++;
+                }
+                return results_obj;
+            },
             templates: {
                 item: document.getElementById('hit-template').innerHTML,
                 empty: "We didn't find any results for the search <em>\"{{query}}\"</em>"
