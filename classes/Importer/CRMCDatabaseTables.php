@@ -26,6 +26,7 @@ class CRMCDatabaseTables
         $group_table = $wpdb->prefix.'groups';
         $properties_table = $wpdb->prefix.'properties';
         $imports_table = $wpdb->prefix.'imports';
+        $exports_table = $wpdb->prefix.'exports';
 
         if(!DatabaseTables::exists($chapters_table))
         {
@@ -81,6 +82,18 @@ class CRMCDatabaseTables
 			chapter_id mediumint(9),
 			created_at DATETIME,
 			FOREIGN KEY (chapter_id) REFERENCES $chapters_table(id),
+			PRIMARY KEY  (id)
+		) {$wpdb->get_charset_collate()}";
+
+            DatabaseTables::create($sql);
+        }
+
+        if(!DatabaseTables::exists($exports_table))
+        {
+            $sql = "CREATE TABLE $exports_table (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			algolia_object_ids longtext,
+			created_at DATETIME,
 			PRIMARY KEY  (id)
 		) {$wpdb->get_charset_collate()}";
 

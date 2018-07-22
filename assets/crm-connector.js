@@ -65,4 +65,33 @@
         $parent.find('.loader').remove();
     };
 
+    /**
+     * Add ajax loading dots
+     * @param parent
+     */
+    window.ajaxAttachLoadingDots = function(parent) {
+        var $parent = $(parent);
+        $parent.append("<span class='wait'></span>")
+
+        debugger;
+        window.dots = window.setInterval( function() {
+            debugger;
+            var wait = $parent.find('.wait').get(0);
+            if ( wait.innerHTML.length > 3 )
+                wait.innerHTML = "";
+            else
+                wait.innerHTML += ".";
+        }, 100);
+    };
+
+    /**
+     * Remove ajax loading dots
+     */
+    window.ajaxRemoveLoadingDots = function(parent) {
+        debugger;
+        var $parent = $(parent);
+        clearInterval(window.dots);
+        $parent.find('.wait').remove();
+    };
+
 })(jQuery);

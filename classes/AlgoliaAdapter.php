@@ -10,6 +10,14 @@ use Exception;
  */
 class AlgoliaAdapter
 {
+    /**
+     * Algolia predefined setting. Algolia does
+     * not allow you to return more then this per page
+     *
+     * @var string
+     */
+    const MAX_HITS_PER_PAGE = 1000;
+
     private $client;
 
     private $index;
@@ -94,6 +102,26 @@ class AlgoliaAdapter
 
         return $response;
 
+    }
+
+    /**
+     * @param $query
+     * @param null $searchParameters
+     * @return mixed
+     */
+    public function search($query, $searchParameters = null)
+    {
+        return $this->index->search($query, $searchParameters);
+    }
+
+
+    /**
+     * @param $search_query
+     * @return mixed
+     */
+    public function browse($search_query)
+    {
+        return $this->index->browse($search_query);
     }
 
     /**

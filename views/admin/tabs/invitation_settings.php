@@ -209,7 +209,7 @@
                 <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
                     <input type="hidden" name="action" value="crmc_edit_list">
                     <input type="hidden" name="crmc_edit_list_nonce" value="<?php echo wp_create_nonce( 'crmc_edit_list_nonce' ); ?>" />
-                    <input type="hidden" name="list_id" value="<?php echo isset($list['id']) ? $list['id'] : ''; ?>">
+                    <input type="hidden" name="list_id" value="<?php echo isset($list['name']) ? $list['name'] : ''; ?>">
                     <div class="form-group required">
                         <label for="name">List Name</label>
                         <small class="text-muted">Choose a creative name for your list!</small>

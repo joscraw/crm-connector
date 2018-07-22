@@ -173,6 +173,8 @@ class Backend
         add_action("wp_ajax_crmc_set_data_type", array( $this, 'set_data_type_action'));
         add_action("wp_ajax_crmc_get_column_names", array( $this, 'get_column_names_action'));
         add_action('wp_ajax_crmc_import_contacts', array( $this, 'import_contacts_action'));
+        add_action('wp_ajax_crmc_create_custom_export', array( $this, 'create_custom_export_action'));
+
     }
 
     public function add_admin_post_handlers()
@@ -763,7 +765,7 @@ class Backend
         foreach($rows as $row)
         {
             $record = [];
-            $record['chapter_name'] = $chapter_name;
+            $record['Chapter Name'] = $chapter_name;
             $record['chapter_id'] = $chapter_id;
             foreach($selected_database_columns as $key => $selectedDatabaseColumn)
             {
@@ -1283,5 +1285,61 @@ class Backend
             exit;
 
         }
+    }
+
+    public function create_custom_export_action()
+    {
+        deleteTransients();
+        $errors = [];
+        global $wpdb;
+
+        if( !isset( $_POST['nonce'] ) || !wp_verify_nonce( $_POST['nonce'], 'crmc_create_custom_export_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if(count($errors) > 0)
+        {
+            $result = $this->json_response();
+            $result['type'] = "error";
+            $result['errors'] = $errors;
+            echo json_encode($result);
+            exit;
+        }
+
+        $search_query = $_POST['search_query'];
+
+        $response = null;
+        try
+        {
+            $algoliaAdapter = new AlgoliaAdapter(get_option('crmc_algolia_application_id'), get_option('crmc_algolia_api_key'), get_option('crmc_algolia_index'));
+            $hits = [];
+            foreach ($algoliaAdapter->browse($search_query) as $hit) {
+                $hits[] = $hit;
+            }
+        }
+        catch(\Exception $exception) {
+            $errors['main'][] = $exception->getMessage();
+            $result = $this->json_response();
+            $result['type'] = "error";
+            $result['errors'] = $errors;
+            echo json_encode($result);
+            exit;
+        }
+
+        if(!empty($hits))
+        {
+            $object_ids = array_column($hits, 'objectID');
+            $result = $wpdb->query(sprintf("INSERT INTO %s%s (algolia_object_ids,created_at) VALUES ('%s', CURRENT_TIMESTAMP)",
+                    $wpdb->prefix,
+                    'exports',
+                    serialize($object_ids))
+            );
+        }
+
+        $result = $this->json_response();
+        $result['notices'] = ["Successfully Created Custom Export List"];
+        echo json_encode($result);
+        exit;
     }
 }
