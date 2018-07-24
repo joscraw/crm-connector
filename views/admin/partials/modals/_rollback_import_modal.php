@@ -13,7 +13,6 @@
                 <table class="table">
                     <tr>
                         <td>Number Of Students</td>
-                        <td>Rollback Type</td>
                         <td>Creation Date</td>
                         <td>Rollback</td>
                     </tr>
@@ -26,8 +25,7 @@
 
                         <tr>
                             <td><?php echo count($object_ids);?></td>
-                            <td><?php echo $instance->is_import ? 'From Import' : 'From Export'; ?></td>
-                            <td><?php echo $instance->created_at;?></td>
+                            <td><?php echo date('Y-m-d', strtotime($instance->created_at));  ?></td>
                             <td>
                                 <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
                                     <input type="hidden" name="action" value="crmc_rollback_import">

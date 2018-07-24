@@ -1,6 +1,5 @@
 <?php
 
-
 namespace CRMConnector\Importer;
 
 use CRMConnector\Support\DatabaseTables;
@@ -27,6 +26,8 @@ class CRMCDatabaseTables
         $properties_table = $wpdb->prefix.'properties';
         $imports_table = $wpdb->prefix.'imports';
         $exports_table = $wpdb->prefix.'exports';
+        $batch_subscription_crons_table = $wpdb->prefix.'batch_subscription_crons';
+        $batch_unsubscription_crons_table = $wpdb->prefix.'batch_unsubscription_crons';
 
         if(!DatabaseTables::exists($chapters_table))
         {
@@ -80,6 +81,7 @@ class CRMCDatabaseTables
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			algolia_object_ids longtext,
 			chapter_id mediumint(9),
+			in_mandrill boolean,
 			created_at DATETIME,
 			FOREIGN KEY (chapter_id) REFERENCES $chapters_table(id),
 			PRIMARY KEY  (id)
@@ -93,7 +95,27 @@ class CRMCDatabaseTables
             $sql = "CREATE TABLE $exports_table (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			algolia_object_ids longtext,
+			in_mandrill boolean,
 			created_at DATETIME,
+			PRIMARY KEY  (id)
+		) {$wpdb->get_charset_collate()}";
+
+            DatabaseTables::create($sql);
+        }
+
+        if(!DatabaseTables::exists($batch_subscription_crons_table))
+        {
+            $sql = "CREATE TABLE $batch_subscription_crons_table (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			import_id mediumint(9),
+			export_id mediumint(9),
+			list_id tinytext,
+			status tinytext,
+			type tinytext,
+			log_file tinytext,
+			failed_attempts mediumint(9) NOT NULL DEFAULT 0,
+			created_at DATETIME,
+			completed_at DATETIME,
 			PRIMARY KEY  (id)
 		) {$wpdb->get_charset_collate()}";
 

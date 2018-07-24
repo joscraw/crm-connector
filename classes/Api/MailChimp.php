@@ -20,6 +20,12 @@ class MailChimp
 {
 
     /**
+     * Max number of members that can be added per api call lists/{id}
+     * @var string
+     */
+    const MAX_NUM_MEMBERS_ADDED_PER_CALL = 500;
+
+    /**
      * Private constructor so nobody else can instantiate it
      *
      */
@@ -184,6 +190,31 @@ class MailChimp
             sprintf("{$this->api_version}/lists/%s", $list_id),
             [
                 'json' => $payload,
+                'auth' => $creds->toArray(),
+                'headers' => [
+                    'Accept'     => 'application/json',
+                    'content-type' =>  'application/json'
+                ]
+            ]);
+
+        return $response;
+    }
+
+    /**
+     * @param Creds $creds
+     * @param $members
+     * @param $list_id
+     */
+    public function batch_sub_unsub_members(Creds $creds, $members, $list_id)
+    {
+        $mailchimp_client = GuzzleFactory::get_mailchimp_instance([
+            "base_uri" => "https://{$creds->data_center}.api.mailchimp.com"
+        ]);
+
+        $response = $mailchimp_client->post(
+            sprintf("{$this->api_version}/lists/%s", $list_id),
+            [
+                'json' => $members,
                 'auth' => $creds->toArray(),
                 'headers' => [
                     'Accept'     => 'application/json',

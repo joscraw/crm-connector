@@ -47,7 +47,6 @@
      * @param parent
      */
     window.ajaxAttachLoadingSpinnerToContainer = function(parent) {
-        debugger;
         var $parent;
         // display the loading spinner on th parent container if nothing is is defined
         $parent = parent ? $(parent) : $('.js-container');
@@ -58,7 +57,6 @@
      * @param parent
      */
     window.ajaxRemoveLoadingSpinnerFromContainer = function(parent) {
-        debugger;
         var $parent;
         // attempt to remove the loading spinner from the parent container if nothing is is defined
         $parent = parent ? $(parent) : $('.js-container');
@@ -71,11 +69,9 @@
      */
     window.ajaxAttachLoadingDots = function(parent) {
         var $parent = $(parent);
-        $parent.append("<span class='wait'></span>")
+        $parent.append("<span style='position:absolute' class='wait'></span>")
 
-        debugger;
         window.dots = window.setInterval( function() {
-            debugger;
             var wait = $parent.find('.wait').get(0);
             if ( wait.innerHTML.length > 3 )
                 wait.innerHTML = "";
@@ -88,7 +84,6 @@
      * Remove ajax loading dots
      */
     window.ajaxRemoveLoadingDots = function(parent) {
-        debugger;
         var $parent = $(parent);
         clearInterval(window.dots);
         $parent.find('.wait').remove();

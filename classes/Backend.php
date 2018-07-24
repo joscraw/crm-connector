@@ -11,6 +11,8 @@ use CRMConnector\Api\Models\MailChimp\Creds;
 use CRMConnector\Api\Models\MailChimp\GetListsResponse;
 use CRMConnector\Api\Models\MailChimpList;
 use CRMConnector\Concerns\Renderable;
+use CRMConnector\Crons\Initializers\BatchSubscriptionCronInitializer;
+use CRMConnector\Crons\Models\BatchSubscriptionCronModel;
 use finfo;
 use CRMConnector\Utils\CRMCFunctions;
 use CRMConnector\Api\GuzzleFactory;
@@ -174,7 +176,8 @@ class Backend
         add_action("wp_ajax_crmc_get_column_names", array( $this, 'get_column_names_action'));
         add_action('wp_ajax_crmc_import_contacts', array( $this, 'import_contacts_action'));
         add_action('wp_ajax_crmc_create_custom_export', array( $this, 'create_custom_export_action'));
-
+        add_action('wp_ajax_crmc_batch_subscribe_contacts', array( $this, 'batch_subscribe_contacts_action'));
+        add_action('wp_ajax_crmc_batch_unsubscribe_contacts', array( $this, 'batch_unsubscribe_contacts_action'));
     }
 
     public function add_admin_post_handlers()
@@ -188,7 +191,6 @@ class Backend
         add_action('admin_post_crmc_add_list', array($this, 'add_list'));
         add_action('admin_post_crmc_remove_list', array($this, 'remove_list'));
         add_action('admin_post_crmc_edit_list', array($this, 'edit_list'));
-
     }
 
     private function getSettingsTabs() {
@@ -1339,6 +1341,62 @@ class Backend
 
         $result = $this->json_response();
         $result['notices'] = ["Successfully Created Custom Export List"];
+        echo json_encode($result);
+        exit;
+    }
+
+    public function batch_subscribe_contacts_action()
+    {
+        deleteTransients();
+        $errors = [];
+
+        if( !isset( $_POST['nonce'] ) || !wp_verify_nonce( $_POST['nonce'], 'crmc_batch_subscribe_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        $model = new BatchSubscriptionCronModel();
+        $model->handle_request($_REQUEST);
+
+        if($model->is_valid() && BatchSubscriptionCronInitializer::enqueue_cron($model))
+        {
+            $result = $this->json_response();
+            $result['notices'] = ($model->getType() === 'unsubscribed') ? ["Contacts Queued to be Unsubscribed"] : ["Contacts Queued to be Subscribed"];
+            echo json_encode($result);
+            exit;
+        }
+
+        $result = $this->json_response();
+        $result['type'] = "error";
+        $result['errors'] = $errors;
+        echo json_encode($result);
+        exit;
+    }
+
+    public function batch_unsubscribe_contacts_action()
+    {
+        deleteTransients();
+        $errors = [];
+
+        if( !isset( $_POST['nonce'] ) || !wp_verify_nonce( $_POST['nonce'], 'crmc_batch_unsubscribe_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        $model = new BatchSubscriptionCronModel();
+        $model->handle_request($_REQUEST);
+
+        if($model->is_valid() && BatchSubscriptionCronInitializer::enqueue_cron($model))
+        {
+            $result = $this->json_response();
+            $result['notices'] = ["Contacts queued to be imported"];
+            echo json_encode($result);
+            exit;
+        }
+
+        $result = $this->json_response();
+        $result['type'] = "error";
+        $result['errors'] = $errors;
         echo json_encode($result);
         exit;
     }

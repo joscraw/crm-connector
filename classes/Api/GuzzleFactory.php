@@ -73,7 +73,7 @@ class GuzzleFactory
             $config = array_merge(
                 [
                     'base_uri' => 'http://httpbin.org',
-                    'timeout'  => 2.0,
+                    'timeout'  => 10.0,
                 ], $config
             );
 

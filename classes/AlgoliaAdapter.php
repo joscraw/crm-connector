@@ -14,9 +14,16 @@ class AlgoliaAdapter
      * Algolia predefined setting. Algolia does
      * not allow you to return more then this per page
      *
-     * @var string
+     * @var int
      */
     const MAX_HITS_PER_PAGE = 1000;
+
+    /**
+     * Algolia max number of objects can fetch per request
+     * using get_objects(
+     * @var int
+     */
+    const MAX_FETCH_OBJECTS_PER_REQUEST = 500;
 
     private $client;
 
@@ -43,8 +50,8 @@ class AlgoliaAdapter
         } catch(\Exception $exception) {
             throw $exception;
         }
-        $this->index = $this->client->initIndex($indexName);
-        /*$this->index->setSettings($this->getDefaultSettings());*/
+        $this->index = $index = $this->client->initIndex($indexName);
+        $index->setSettings(array('distinct' => 1, "attributeForDistinct" => "Personal Email"));
 
     }
 
@@ -122,6 +129,15 @@ class AlgoliaAdapter
     public function browse($search_query)
     {
         return $this->index->browse($search_query);
+    }
+
+    /**
+     * @param $object_ids
+     * @return mixed
+     */
+    public function getObjects($object_ids)
+    {
+        return $this->index->getObjects($object_ids);
     }
 
     /**
