@@ -12,6 +12,7 @@
      * @param temp
      */
     window.ajaxRenderNoticesAndErrors = function(response, parent, temp) {
+        debugger;
         var $parent;
         // display the erorr message on the parent container if nothing is is defined
         $parent = parent ? $(parent) : $('.js-container');
@@ -23,6 +24,8 @@
         switch(response.type)
         {
             case 'error':
+                if(response.errors.length === 0)
+                    break;
                 html += "<div class='alert alert-danger" + (temp === false ? "" : " temp") + " role='alert'>";
                 $.each(response.errors, function(index, message) {
                     html += "<p>"+message+"</p>";
@@ -31,6 +34,8 @@
                 break;
 
             case 'success':
+                if(response.notices.length === 0)
+                    break;
                 html += "<div class='alert alert-success" + (temp === false ? "" : " temp") + " role='alert'>";
                 $.each(response.notices, function(index, message) {
                     html += "<p>"+message+"</p>";

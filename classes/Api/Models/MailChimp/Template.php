@@ -64,6 +64,17 @@ class Template
     }
 
     /**
+     * Converts the data to an array used in the view
+     */
+    public function to_array_for_view()
+    {
+        return [
+            'name' => $this->name,
+            'template_html' => $this->html,
+        ];
+    }
+
+    /**
      * The /templates API call requires the data
      * gets passed up as a object. Normally I would use the entire
      * template object but I don't want non necessary properties to be passed up

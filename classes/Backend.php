@@ -170,6 +170,11 @@ class Backend
         add_action('wp_ajax_crmc_create_custom_export', array( $this, 'create_custom_export_action'));
         add_action('wp_ajax_crmc_batch_subscribe_contacts', array( $this, 'batch_subscribe_contacts_action'));
         add_action('wp_ajax_crmc_batch_unsubscribe_contacts', array( $this, 'batch_unsubscribe_contacts_action'));
+        add_action('wp_ajax_crmc_get_edit_template_form', array( $this, 'get_edit_template_form_action'));
+        add_action('wp_ajax_crmc_post_edit_template_form', array( $this, 'post_edit_template_form_action'));
+        add_action('wp_ajax_crmc_delete_template', array( $this, 'delete_template_action'));
+
+
     }
 
     public function add_admin_post_handlers()
@@ -1325,15 +1330,22 @@ class Backend
         if(!empty($hits))
         {
             $object_ids = array_column($hits, 'objectID');
-            $result = $wpdb->query(sprintf("INSERT INTO %s%s (algolia_object_ids,created_at) VALUES ('%s', CURRENT_TIMESTAMP)",
+                    $wpdb->query(sprintf("INSERT INTO %s%s (algolia_object_ids,created_at) VALUES ('%s', CURRENT_TIMESTAMP)",
                     $wpdb->prefix,
                     'exports',
                     serialize($object_ids))
             );
+
+            $result = $this->json_response();
+            $result['notices'] = ["Successfully Created Custom Export List"];
+            echo json_encode($result);
+            exit;
         }
 
+        $errors['main'][] = "Woah! You Need to Import Some Students First!";
         $result = $this->json_response();
-        $result['notices'] = ["Successfully Created Custom Export List"];
+        $result['type'] = "error";
+        $result['errors'] = $errors;
         echo json_encode($result);
         exit;
     }
@@ -1440,5 +1452,178 @@ class Backend
         $field_params = $template->toArray();
         redirectToPage((array('page' => 'crmc_settings','tab' => 'invitation_settings') + $field_params), "create_template");
         exit;
+    }
+
+    public function get_edit_template_form_action()
+    {
+        $errors = [];
+
+        if( !isset( $_GET['template_id']) || empty($_GET['template_id']))
+        {
+            $errors['main'][] = 'Invalid form submission.';
+
+            $result = $this->json_response();
+            $result['type'] = "error";
+            $result['errors'] = $errors;
+            echo json_encode($result);
+            exit;
+        }
+
+        $template_id = sanitize_text_field($_GET['template_id']);
+
+        $creds = new Creds;
+        $creds->api_key = get_option('crmc_mailchimp_api_key', null);
+        $creds->username = get_option('crmc_mailchimp_username', null);
+
+        $mailchimp_api = MailChimp::instance();
+        $response = null;
+        try
+        {
+            $response = $mailchimp_api->get_template($creds, $template_id);
+        }
+        catch(\Exception $exception)
+        {
+            $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+            $result = $this->json_response();
+            $result['type'] = "error";
+            $result['errors'] = $errors;
+            echo json_encode($result);
+            exit;
+        }
+
+        if($response)
+        {
+            $template = json_decode(((string) $response->getBody()), true);
+
+            $html_form = $this->render('admin/partials/forms/edit_template_form', array(
+                'template' => $template
+            ));
+
+            $result = $this->json_response();
+            $result['html_form'] = $html_form;
+            echo json_encode($result);
+            exit;
+
+        }
+
+    }
+
+    public function post_edit_template_form_action()
+    {
+        $errors = [];
+
+        if( !isset( $_POST['crmc_edit_template_nonce'] ) || !wp_verify_nonce( $_POST['crmc_edit_template_nonce'], 'crmc_edit_template_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if( !isset( $_POST['template_id']) || empty($_POST['template_id']))
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if(count($errors) > 0)
+        {
+            $result = $this->json_response();
+            $result['type'] = "error";
+            $result['errors'] = $errors;
+            echo json_encode($result);
+            exit;
+        }
+
+        $template_id = sanitize_text_field($_POST['template_id']);
+        $template = new Template();
+        $template->handle_request($_REQUEST);
+
+        if($template->is_valid(true))
+        {
+            $creds = new Creds;
+            $creds->api_key = get_option('crmc_mailchimp_api_key', null);
+            $creds->username = get_option('crmc_mailchimp_username', null);
+
+            $mailchimp_api = MailChimp::instance();
+            try
+            {
+                $response = $mailchimp_api->edit_template($creds, $template, $template_id);
+            }
+            catch(\Exception $exception)
+            {
+                $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+                $result = $this->json_response();
+                $result['type'] = "error";
+                $result['errors'] = $errors;
+                echo json_encode($result);
+                exit;
+            }
+
+            $result = $this->json_response();
+            $result['notices'] = ["Successfully Modified Template!"];
+            echo json_encode($result);
+            exit;
+        }
+
+        $errors = $template->errors();
+        $template = $template->to_array_for_view();
+
+        $html_form = $this->render('admin/partials/forms/edit_template_form', array(
+            'template' => $template,
+            'errors'   => $errors
+        ));
+
+        $result = $this->json_response();
+        $result['html_form'] = $html_form;
+        echo json_encode($result);
+        exit;
+    }
+
+    public function delete_template_action()
+    {
+        $errors = [];
+
+        if( !isset( $_POST['nonce'] ) || !wp_verify_nonce( $_POST['nonce'], 'crmc_delete_template_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if( !isset( $_POST['template_id']) || empty($_POST['template_id']))
+        {
+            $errors['main'][] = 'Invalid form submission.';
+        }
+
+        if(count($errors) > 0)
+        {
+            $result = $this->json_response();
+            $result['type'] = "error";
+            $result['errors'] = $errors;
+            echo json_encode($result);
+            exit;
+        }
+
+        $template_id = sanitize_text_field($_POST['template_id']);
+
+        $creds = new Creds;
+        $creds->api_key = get_option('crmc_mailchimp_api_key', null);
+        $creds->username = get_option('crmc_mailchimp_username', null);
+
+        $mailchimp_api = MailChimp::instance();
+        try
+        {
+            $response = $mailchimp_api->delete_template($creds, $template_id);
+        }
+        catch(\Exception $exception)
+        {
+            $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+            $result = $this->json_response();
+            $result['type'] = "error";
+            $result['errors'] = $errors;
+            echo json_encode($result);
+            exit;
+        }
+
+        $result = $this->json_response();
+        $result['notices'] = ["Successfully Deleted Template!"];
+        echo json_encode($result);
+        exit;
+
     }
 }

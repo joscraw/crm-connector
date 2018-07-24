@@ -305,5 +305,80 @@ class MailChimp
         return $response;
     }
 
+    /**
+     * @param Creds $creds
+     * @param $template_id
+     * @return mixed
+     */
+    public function get_template(Creds $creds, $template_id)
+    {
+        $mailchimp_client = GuzzleFactory::get_mailchimp_instance([
+            "base_uri" => "https://{$creds->data_center}.api.mailchimp.com"
+        ]);
+
+        $response = $mailchimp_client->get(
+            sprintf("{$this->api_version}/templates/%s", $template_id),
+            [
+                'auth' => $creds->toArray(),
+                'headers' => [
+                    'Accept'     => 'application/json',
+                    'content-type' =>  'application/json'
+                ]
+            ]);
+
+        return $response;
+    }
+
+    /**
+     * @param Creds $creds
+     * @param Template $template
+     * @param $template_id
+     * @return mixed
+     */
+    public function edit_template(Creds $creds, Template $template, $template_id)
+    {
+        $mailchimp_client = GuzzleFactory::get_mailchimp_instance([
+            "base_uri" => "https://{$creds->data_center}.api.mailchimp.com"
+        ]);
+
+        $response = $mailchimp_client->patch(
+            sprintf("{$this->api_version}/templates/%s", $template_id),
+            [
+                'json' => $template->toObject(),
+                'auth' => $creds->toArray(),
+                'headers' => [
+                    'Accept'     => 'application/json',
+                    'content-type' =>  'application/json'
+                ]
+            ]);
+
+        return $response;
+    }
+
+    /**
+     * @param Creds $creds
+     * @param $template_id
+     * @return mixed
+     */
+    public function delete_template(Creds $creds, $template_id)
+    {
+        $mailchimp_client = GuzzleFactory::get_mailchimp_instance([
+            "base_uri" => "https://{$creds->data_center}.api.mailchimp.com"
+        ]);
+
+        $response = $mailchimp_client->delete(
+            sprintf("{$this->api_version}/templates/%s", $template_id),
+            [
+                'auth' => $creds->toArray(),
+                'headers' => [
+                    'Accept'     => 'application/json',
+                    'content-type' =>  'application/json'
+                ]
+            ]);
+
+        return $response;
+    }
+
+
 
 }

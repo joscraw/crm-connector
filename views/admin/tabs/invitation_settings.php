@@ -33,8 +33,8 @@
                 <?php include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/admin/partials/create_template.php'); ?>
             </div>
 
-            <div class="tab-pane" id="edit_template">
-                <?php include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/admin/partials/edit_template.php'); ?>
+            <div class="tab-pane js-edit-template-container" id="edit_template">
+                <!-- dynamically filled content with ajax -->
             </div>
 
             <div class="tab-pane" id="templates">

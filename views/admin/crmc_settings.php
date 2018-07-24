@@ -59,6 +59,15 @@ echo $tab_contents;
             window.history.replaceState({}, document.title, "/" + "wp-admin/admin.php?page="+page+"&tab="+tab);
         });
 
+        // Everytime a tab is clicked on then remove any alerts
+        $('.js-left-nav li, .navbar-left li, .nav-tabs li').on('click', function(e)
+        {
+            if($('.alert'))
+            {
+                $('.alert').remove();
+            }
+        });
+
         function getParameterByName(name, url) {
             if (!url) url = window.location.href;
             name = name.replace(/[\[\]]/g, '\\$&');
