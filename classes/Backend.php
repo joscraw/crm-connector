@@ -9,6 +9,8 @@ use CRMConnector\Api\Models\CampaignDefaults;
 use CRMConnector\Api\Models\Contact;
 use CRMConnector\Api\Models\MailChimp\Creds;
 use CRMConnector\Api\Models\MailChimp\GetListsResponse;
+use CRMConnector\Api\Models\MailChimp\GetTemplatesResponse;
+use CRMConnector\Api\Models\MailChimp\Template;
 use CRMConnector\Api\Models\MailChimpList;
 use CRMConnector\Concerns\Renderable;
 use CRMConnector\Crons\Initializers\BatchSubscriptionCronInitializer;
@@ -118,28 +120,18 @@ class Backend
                 $creds->username = get_option('crmc_mailchimp_username', null);
 
                 $mailchimp_api = MailChimp::instance();
-                $response = null;
-                try
-                {
-                    $response = $mailchimp_api->get_lists($creds);
-                }
-                catch(\Exception $exception)
-                {
-                    $name = "Josh";
-                }
 
-                if($response)
-                {
-                    $body = (string) $response->getBody();
-                    $lists = json_decode($body, true);
-                    $response = new GetListsResponse;
-                    $response->fromArray($lists);
-                    $lists_response = $response->toArray();
-                }
+                $list_response = $mailchimp_api->get_lists($creds, $_REQUEST);
+                $get_lists_response = new GetListsResponse;
+                $get_lists_response->handleResponse($list_response);
 
+                $template_response = $mailchimp_api->get_templates($creds, $_REQUEST);
+                $get_templates_response = new GetTemplatesResponse;
+                $get_templates_response->handleResponse($template_response);
 
                 $tab_contents = $this->render('admin/tabs/invitation_settings', array(
-                    'lists_response' => $lists_response
+                    'lists_response' => $get_lists_response->toArray(),
+                    'templates_response'    => $get_templates_response->toArray()
                 ));
                 break;
         }
@@ -191,6 +183,7 @@ class Backend
         add_action('admin_post_crmc_add_list', array($this, 'add_list'));
         add_action('admin_post_crmc_remove_list', array($this, 'remove_list'));
         add_action('admin_post_crmc_edit_list', array($this, 'edit_list'));
+        add_action('admin_post_crmc_create_template', array($this, 'create_template'));
     }
 
     private function getSettingsTabs() {
@@ -1398,6 +1391,54 @@ class Backend
         $result['type'] = "error";
         $result['errors'] = $errors;
         echo json_encode($result);
+        exit;
+    }
+
+    public function create_template()
+    {
+        deleteTransients();
+        $errors = [];
+
+        if( !isset( $_POST['crmc_create_template_nonce'] ) || !wp_verify_nonce( $_POST['crmc_create_template_nonce'], 'crmc_create_template_nonce') )
+        {
+            $errors['main'][] = 'Invalid form submission.';
+
+            set_transient( 'errors', $errors, 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "create_template");
+            exit;
+        }
+
+        $template = new Template();
+        $template->handle_request($_REQUEST);
+
+        if($template->is_valid(true))
+        {
+            $creds = new Creds;
+            $creds->api_key = get_option('crmc_mailchimp_api_key', null);
+            $creds->username = get_option('crmc_mailchimp_username', null);
+
+            $mailchimp_api = MailChimp::instance();
+            try
+            {
+                $mailchimp_api->create_template($creds, $template);
+            }
+            catch(\Exception $exception)
+            {
+                $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+                set_transient( 'errors', $errors, 10 );
+                $field_params = $template->toArray();
+                redirectToPage((array('page' => 'crmc_settings','tab' => 'invitation_settings') + $field_params), "create_template");
+                exit;
+            }
+
+            set_transient( 'successMessage', 'Template Successfully Created', 10 );
+            redirectToPage(array('page' => 'crmc_settings','tab' => 'invitation_settings'), "create_template");
+            exit;
+        }
+
+        set_transient( 'errors', $template->errors(), 10 );
+        $field_params = $template->toArray();
+        redirectToPage((array('page' => 'crmc_settings','tab' => 'invitation_settings') + $field_params), "create_template");
         exit;
     }
 }

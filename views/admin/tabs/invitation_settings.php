@@ -5,10 +5,12 @@
     ?>
 
     <div class="col-md-3">
-        <ul class="nav nav-tabs nav-stacked navbar-left">
+        <ul class="nav nav-tabs nav-stacked navbar-left js-left-nav">
             <li class="active"><a href="#create_list" data-toggle="pill">Create List</a></li>
             <li><a href="#lists" data-toggle="pill">Lists</a></li>
             <li style="display:none"><a href="#edit_list" data-toggle="pill">Edit List</a></li>
+            <li><a href="#create_template" data-toggle="pill">Create Template</a></li>
+            <li style="display:none"><a href="#edit_template" data-toggle="pill">Edit Template</a></li>
             <li><a href="#templates" data-toggle="pill">Templates</a></li>
         </ul>
     </div>
@@ -27,8 +29,16 @@
                 <?php include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/admin/partials/edit_list.php'); ?>
             </div>
 
+            <div class="tab-pane" id="create_template">
+                <?php include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/admin/partials/create_template.php'); ?>
+            </div>
+
+            <div class="tab-pane" id="edit_template">
+                <?php include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/admin/partials/edit_template.php'); ?>
+            </div>
+
             <div class="tab-pane" id="templates">
-                templates
+                <?php include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/admin/partials/templates.php'); ?>
             </div>
 
         </div>

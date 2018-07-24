@@ -2,13 +2,16 @@
 
 namespace CRMConnector\Api\Models\MailChimp;
 
+
 /**
- * Class GetListsResponse
+ * Class GetTemplatesResponse
  * @package CRMConnector\Api\Models\MailChimp
  */
-class GetListsResponse
+class GetTemplatesResponse
 {
-    private $lists = [];
+
+    private $templates;
+
     private $total_items;
 
     public function __get($property)
@@ -41,8 +44,7 @@ class GetListsResponse
     public function handleResponse($response)
     {
         $body = (string) $response->getBody();
-        $lists = json_decode($body, true);
-        $this->fromArray($lists);
+        $templates = json_decode($body, true);
+        $this->fromArray($templates);
     }
-
 }

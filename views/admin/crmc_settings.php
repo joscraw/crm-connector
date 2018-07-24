@@ -48,6 +48,26 @@ echo $tab_contents;
         $('.nav-tabs a').on('shown.bs.tab', function (e) {
             window.location.hash = e.target.hash;
         });
+
+        // Because of the pagination we have built in and using tabs and hashes
+        // We need to clear the sorting params from the URL everytime a tab is clicked on
+        // and a hash is changed
+        $('.js-left-nav li').on('click', function(e)
+        {
+            var page = getParameterByName('page', window.location.href);
+            var tab = getParameterByName('tab', window.location.href);
+            window.history.replaceState({}, document.title, "/" + "wp-admin/admin.php?page="+page+"&tab="+tab);
+        });
+
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
         
     })(jQuery);
 

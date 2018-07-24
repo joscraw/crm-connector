@@ -53,6 +53,8 @@
 
 </table>
 
+<?php render_pagination($total_items, 'crmc_settings', 'invitation_settings', 'lists', 'lists_offset', 'lists_count'); ?>
+
 <script>
 
     (function($){

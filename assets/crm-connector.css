@@ -5,7 +5,7 @@
     color: red;
 }
 
-.form-error + input {
+.form-error + input, .form-error + textarea {
     border: 1px solid red;
 }
 

@@ -10,6 +10,7 @@ namespace CRMConnector\Api;
 
 use CRMConnector\Api\GuzzleFactory;
 use CRMConnector\Api\Models\MailChimp\Creds;
+use CRMConnector\Api\Models\MailChimp\Template;
 use CRMConnector\Api\Models\MailChimpList;
 
 /**
@@ -127,17 +128,31 @@ class MailChimp
 
     /**
      * @param Creds $creds
+     * @param $request
      * @return mixed
      */
-    public function get_lists(Creds $creds)
+    public function get_lists(Creds $creds, $request)
     {
         $mailchimp_client = GuzzleFactory::get_mailchimp_instance([
             "base_uri" => "https://{$creds->data_center}.api.mailchimp.com"
         ]);
 
+        $query = [];
+
+        if(isset($request['lists_offset']))
+        {
+            $query['offset'] = $request['lists_offset'];
+        }
+
+        if(isset($request['lists_count']))
+        {
+            $query['count'] = $request['lists_count'];
+        }
+
         $response = $mailchimp_client->get(
             "{$this->api_version}/lists",
             [
+                'query' => $query,
                 'auth' => $creds->toArray(),
                 'headers' => [
                     'Accept'     => 'application/json',
@@ -215,6 +230,71 @@ class MailChimp
             sprintf("{$this->api_version}/lists/%s", $list_id),
             [
                 'json' => $members,
+                'auth' => $creds->toArray(),
+                'headers' => [
+                    'Accept'     => 'application/json',
+                    'content-type' =>  'application/json'
+                ]
+            ]);
+
+        return $response;
+    }
+
+    /**
+     * @param Creds $creds
+     * @param Template $template
+     * @return
+     */
+    public function create_template(Creds $creds, Template $template)
+    {
+        $mailchimp_client = GuzzleFactory::get_mailchimp_instance([
+            "base_uri" => "https://{$creds->data_center}.api.mailchimp.com"
+        ]);
+
+        $response = $mailchimp_client->post(
+            "{$this->api_version}/templates",
+            [
+                'json' => $template->toObject(),
+                'auth' => $creds->toArray(),
+                'headers' => [
+                    'Accept'     => 'application/json',
+                    'content-type' =>  'application/json'
+                ]
+            ]);
+
+        return $response;
+    }
+
+    /**
+     * @param Creds $creds
+     * @param $request
+     * @return mixed
+     */
+    public function get_templates(Creds $creds, $request)
+    {
+        $mailchimp_client = GuzzleFactory::get_mailchimp_instance([
+            "base_uri" => "https://{$creds->data_center}.api.mailchimp.com"
+        ]);
+
+        $query = [
+            'type' => 'user'
+        ];
+
+        if(isset($request['templates_offset']))
+        {
+            $query['offset'] = $request['templates_offset'];
+        }
+
+        if(isset($request['templates_count']))
+        {
+            $query['count'] = $request['templates_count'];
+        }
+
+        $response = $mailchimp_client->get(
+            "{$this->api_version}/templates",
+            [
+                // fetch only the templates created by a user
+                'query' => $query,
                 'auth' => $creds->toArray(),
                 'headers' => [
                     'Accept'     => 'application/json',
