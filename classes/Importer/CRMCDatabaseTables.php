@@ -27,7 +27,8 @@ class CRMCDatabaseTables
         $imports_table = $wpdb->prefix.'imports';
         $exports_table = $wpdb->prefix.'exports';
         $batch_subscription_crons_table = $wpdb->prefix.'batch_subscription_crons';
-        $batch_unsubscription_crons_table = $wpdb->prefix.'batch_unsubscription_crons';
+        $templates_table = $wpdb->prefix.'mailchimp_templates';
+        $batch_import_contacts_crons_table = $wpdb->prefix.'batch_import_contacts_cron';
 
         if(!DatabaseTables::exists($chapters_table))
         {
@@ -121,6 +122,39 @@ class CRMCDatabaseTables
 
             DatabaseTables::create($sql);
         }
+
+        if(!DatabaseTables::exists($templates_table))
+        {
+            $sql = "CREATE TABLE $templates_table (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			template_id tinytext,
+			html tinytext,
+			PRIMARY KEY  (id)
+		) {$wpdb->get_charset_collate()}";
+
+            DatabaseTables::create($sql);
+        }
+
+
+        if(!DatabaseTables::exists($batch_import_contacts_crons_table))
+        {
+            $sql = "CREATE TABLE $batch_import_contacts_crons_table (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			database_column_names longtext,
+			selected_file_columns longtext,
+			chapter_id mediumint(9),
+			status tinytext,
+			file_upload_path tinytext,
+			log_file tinytext,
+			failed_attempts mediumint(9) NOT NULL DEFAULT 0,
+			created_at DATETIME,
+			completed_at DATETIME,
+			PRIMARY KEY  (id)
+		) {$wpdb->get_charset_collate()}";
+
+            DatabaseTables::create($sql);
+        }
+
 
         $mapping = explode(",", file_get_contents(CRMCFunctions::plugin_dir() . '/config/default_column_names.csv'));
 

@@ -13,34 +13,26 @@ class MessageParser
      * Looks at a mailchimp exception message and determines
      * The best User Friendly Response to Render
      *
-     * @param $message
+     * @param \Exception $exception
      * @return mixed
      */
-    public static function ParseMailChimpMessage($message)
+    public static function ParseMailChimpMessage(\Exception $exception)
     {
-        $message_map = [
-            ['search_for' => ['Property must have type set'], 'message' =>  'Whoops! You forgot to set a Data Type one one or more of your Properties!'],
-            ['search_for' => ['API Key Invalid'], 'message' =>  'Whoops, You need to enter in a valid API Key!'],
-            ['search_for' => ['api.mailchimp.com', 'Could not resolve host'], 'message' =>  'Whoops, You need to enter in a valid API Key!'],
-        ];
 
-        foreach($message_map as $key => $map)
+        $response = json_decode($exception->getResponse()->getBody()->getContents(), true);
+
+        $errors = $response['errors'];
+
+        $message = "";
+        foreach ($errors as $error)
         {
-            $matches = 0;
-            foreach($map['search_for'] as $search_term)
-            {
-                if(strpos($message, $search_term) !== false){
-                    $matches++;
-                }
-            }
-            if(count($map['search_for']) === $matches)
-            {
-                return $map['message'];
-            }
+            $message = isset($error['field']) ? $error['field'] . "<br>" : "";
+            $message .= isset($error['message']) ? $error['message'] . "<br>" : "";
         }
 
-        return 'System Error';
+        $message = empty($message) ? "System Error" : $message;
 
+        return $message;
     }
 
 

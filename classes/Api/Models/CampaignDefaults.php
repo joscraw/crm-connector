@@ -138,6 +138,12 @@ class CampaignDefaults implements \JsonSerializable
         {
             $this->errors['from_name'][] = 'You must enter a from name.';
         }
+
+        if(strpos($this->from_name, '@'))
+        {
+            $this->errors['from_name'][] = 'Can\'t contain @ symbol in from name';
+        }
+
         return $this;
     }
 

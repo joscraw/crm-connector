@@ -1,0 +1,30 @@
+User:  - July 24, 2018, 9:12 pm
+Attempt: Initializing Cron...
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: Initializing Subscribe for MailChimp List c3c2d92f5c
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: Initializing Subscribe for export 3
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: Fetching Algolia Object IDs from Database.
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: Count of Requested Email Addresses to Subscribe in MailChimp: 22
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: Fetching records from Algolia using object ids from database.
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: De-duplicating email addresses for MailChimp
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: Count of Actual Email Addresses to Subscribe into MailChimp after De-duping: 11
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: Subscribing 11 email addresses into MailChimp
+-------------------------
+User:  - July 24, 2018, 9:12 pm
+Attempt: Successfully Subscribed 11 email addresses into MailChimp
+-------------------------

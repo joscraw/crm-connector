@@ -38,10 +38,14 @@ class CRMCFunctions
         return self::get_environment() === 'production';
     }
 
-
-    public function deduplicate_array($array)
+    /**
+     * Used to get the post id inside an ajax call
+     * @return int
+     */
+    public static function get_post_id()
     {
-
+        $url     = wp_get_referer();
+        return url_to_postid( $url );
     }
 
 

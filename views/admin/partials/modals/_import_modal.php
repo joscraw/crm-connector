@@ -2,7 +2,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header js-modal-header">
-                <h5 class="modal-title" id="exampleModalLongTitle">Student Import Tool</h5>
+                <h5 class="modal-title" id="exampleModalLongTitle">Contact Import Tool</h5>
                 <div id="spinner" class="js-spinner"></div>
 
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -37,7 +37,7 @@
                 <form data-prototype-import-mapping-form="<?php echo htmlspecialchars($prototype_import_mapping_form);?>" class="js-import-form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="crmc_import_contacts">
                     <input type="hidden" name="crmc_import_contacts_nonce" value="<?php echo wp_create_nonce( 'crmc_import_contacts_nonce' ); ?>" />
-                    <input type="hidden" class="js-chapter-id" name="chapter_id" value="<?php echo isset($_GET['chapter_id']) ? $_GET['chapter_id'] : '';?>">
+                    <input type="hidden" class="js-chapter-id" name="chapter_id" value="<?php echo isset($_GET['post']) ? $_GET['post'] : '';?>">
                     <div class="form-group">
                         <label for="studentExcelFile">Student Excel File</label>
 
@@ -52,7 +52,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary js-import-students-button" data-nonce="<?php echo wp_create_nonce( 'crmc_import_file_nonce' ); ?>">Save changes</button>
+                <button type="button" class="btn btn-primary js-import-students-button" data-nonce="<?php echo wp_create_nonce( 'crmc_import_file_nonce' ); ?>">Import Contacts</button>
             </div>
         </div>
     </div>

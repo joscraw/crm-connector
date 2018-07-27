@@ -13,12 +13,15 @@ use CRMConnector\Api\Models\MailChimp\GetTemplatesResponse;
 use CRMConnector\Api\Models\MailChimp\Template;
 use CRMConnector\Api\Models\MailChimpList;
 use CRMConnector\Concerns\Renderable;
+use CRMConnector\Crons\Initializers\BatchContactImportCronInitializer;
 use CRMConnector\Crons\Initializers\BatchSubscriptionCronInitializer;
+use CRMConnector\Crons\Models\BatchContactImportCronModel;
 use CRMConnector\Crons\Models\BatchSubscriptionCronModel;
 use finfo;
 use CRMConnector\Utils\CRMCFunctions;
 use CRMConnector\Api\GuzzleFactory;
 use CRMConnector\Api\HubSpot;
+use WP_Query;
 
 class Backend
 {
@@ -28,15 +31,12 @@ class Backend
 
     public function __construct()
     {
-        $this->data['plugin_url'] = plugins_url('/', dirname(__FILE__));
-
-        $this->data['plugin_path'] = dirname(dirname(__FILE__)) . '/';
-
-        $this->data['admin_url'] = admin_url();;
+        $this->crmc_set_initial_data();
 
         /**************************************************************
         Backend actions and hoooks
         **************************************************************/
+
         add_action('admin_enqueue_scripts', array($this, 'add_admin_scripts'));
 
         add_action('admin_menu', array($this, 'crmc_connector_menu'));
@@ -44,6 +44,30 @@ class Backend
         add_action('admin_init', array($this, 'add_admin_ajax_handlers'));
 
         add_action('admin_init', array($this, 'add_admin_post_handlers'));
+
+        add_action('admin_footer', array($this, 'crmc_add_modals'));
+
+    }
+
+    /**
+     * Setup the data property with a bunch of useful info being used all around the code
+     */
+    public function crmc_set_initial_data()
+    {
+        $this->data['plugin_url'] = plugins_url('/', dirname(__FILE__));
+
+        $this->data['plugin_path'] = dirname(dirname(__FILE__)) . '/';
+
+        $this->data['admin_url'] = admin_url();
+
+
+       /* global $my_admin_page;
+        global $post;
+        $screen = get_current_screen();
+
+        if ( is_admin() && ($screen->id == 'chapters') ) {
+            $this->data['chapter_id'] = $post->ID;;
+        }*/
     }
 
     public function add_admin_scripts()
@@ -76,6 +100,12 @@ class Backend
         wp_enqueue_style('font-awesome.css');
 
     }
+
+    public function crmc_add_modals()
+    {
+       include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/admin/partials/modals/_import_modal.php');
+    }
+
 
     public function crmc_connector_menu()
     {
@@ -638,169 +668,33 @@ class Backend
     public function import_contacts_action() {
 
         global $wpdb;
-        $errors = [];
 
-        if(empty($_POST['chapter_id']) || !isset($_FILES['studentFile']))
-        {
-            $errors[] = 'Invalid form submission.';
-        }
+        $model = new BatchContactImportCronModel();
+        $model->handle_request($_REQUEST, $_FILES);
 
-        if(empty($_FILES['studentFile']))
-        {
-            $errors[] = 'Please add an excel file to import';
-        }
-
-        if(empty($_POST['database_column_name']))
-        {
-            $errors[] = 'Please map at least one database column an excel spreadsheet column';
-        }
-
-        // check to make sure there are no duplicate mapped database column names
-        $dupe_array = array();
-        foreach ($_POST['database_column_name'] as $val) {
-
-            if (++$dupe_array[$val] > 1) {
-                $errors[] = 'You cannot use the same database column name twice!';
-                break;
-            }
-        }
-
-        // check to make sure that a student email has been added to the import
-        if(!in_array('Personal Email', $_POST['database_column_name']))
-            $errors[] = 'You must map an email address!';
-
-
-        // Check the file MIME Type
-        $supported_file_extensions = array(
-            'xsl' => 'application/vnd.ms-excel',
-            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        );
-
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        if(false === $ext = array_search($finfo->file($_FILES['studentFile']['tmp_name']), $supported_file_extensions))
-        {
-            $errors[] = sprintf("Supported file types are (%s)", implode(", ", array_keys($supported_file_extensions)));
-        }
-
-        // Check $_FILES['upfile']['error'] value.
-        switch ($_FILES['studentFile']['error'])
-        {
-            case UPLOAD_ERR_OK:
-                break;
-            case UPLOAD_ERR_NO_FILE:
-                $errors[] = 'No file sent.';
-                break;
-            case UPLOAD_ERR_INI_SIZE:
-            case UPLOAD_ERR_FORM_SIZE:
-                $errors[] = 'Exceeded filesize limit.';
-                break;
-            default:
-                $errors[] = 'Unknown error.';
-        }
-
-        // You should also check filesize here.
-        if ($_FILES['studentFile']['size'] > 50000000)
-        {
-            $errors[] = 'Exceeded filesize limit.';
-        }
-
-        $results = $wpdb->get_results(sprintf("SELECT id, chapter_name FROM %schapters WHERE id = '%s'",
-            $wpdb->prefix,
-            $_POST['chapter_id']
-        ));
-
-        if(empty($results))
-        {
-            $errors[] = 'That chapter does not exist.';
-        }
-
-        if(count($errors) > 0)
+        if(!$model->is_valid())
         {
             $result = $this->json_response();
             $result['type'] = "error";
-            $result['errors'] = $errors;
+            $result['errors'] = $model->getErrors();
             echo json_encode($result);
             exit;
         }
 
-        $chapter_id = $results[0]->id;
-        $chapter_name = $results[0]->chapter_name;
-
-        $upload_path = sprintf(
-            '%s%s/%s',
-            CRMCFunctions::plugin_dir() . '/',
-            'imports',
-            $chapter_id
-        );
-
-        if ( ! is_dir($upload_path))
-        {
-            mkdir($upload_path);
-        }
-
-        $upload_path = sprintf(
-            '%s/%s.%s',
-            $upload_path,
-            date('m-d-Y_hia'),
-            $ext
-        );
-
-        if(false === move_uploaded_file($_FILES['studentFile']['tmp_name'], $upload_path))
+        if($model->move_file() && BatchContactImportCronInitializer::enqueue_cron($model))
         {
             $result = $this->json_response();
-            $result['type'] = "error";
-            $errors['errors'] = $errors;
+            $result['notices'] = ["File Successfully Added to Queue For Importing!"];
             echo json_encode($result);
             exit;
         }
-
-        //upload the data to algolia
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($upload_path);
-        $rows = $spreadsheet->getActiveSheet()->toArray();
-
-        $records = [];
-        $selected_database_columns = json_decode($_POST['selected_database_columns']);
-
-        array_shift($rows);
-        foreach($rows as $row)
-        {
-            $record = [];
-            $record['Chapter Name'] = $chapter_name;
-            $record['chapter_id'] = $chapter_id;
-            foreach($selected_database_columns as $key => $selectedDatabaseColumn)
-            {
-                $record[$_POST['database_column_name'][$key]] = $row[$selectedDatabaseColumn];
-            }
-            $records[] = $record;
-        }
-
-
-        $algoliaAdapter = new AlgoliaAdapter(get_option('crmc_algolia_application_id'), get_option('crmc_algolia_api_key'), get_option('crmc_algolia_index'));
-        try
-        {
-            $response = $algoliaAdapter->addObjects($records);
-        }
-        catch(\Exception $exception)
-        {
-            $result = $this->json_response();
-            $result['type'] = "error";
-            $result['errors'] = [$exception->getMessage()];
-            echo json_encode($result);
-            exit;
-        }
-
-        $result = $wpdb->query(sprintf("INSERT INTO %s%s (algolia_object_ids, chapter_id, created_at) VALUES ('%s', '%s', CURRENT_TIMESTAMP)",
-            $wpdb->prefix,
-            'imports',
-            serialize($response['objectIDs']),
-            $chapter_id)
-        );
-
 
         $result = $this->json_response();
-        $result['notices'] = ["File Imported Successfully"];
+        $result['type'] = "error";
+        $errors['errors'] = $model->getErrors();
         echo json_encode($result);
         exit;
+
     }
 
 
@@ -858,15 +752,6 @@ class Backend
             $errors['main'][] = 'Exceeded filesize limit.';
         }
 
-        $chapter_id = $wpdb->get_var(sprintf("SELECT id FROM %schapters WHERE id = '%s'",
-            $wpdb->prefix,
-            $_POST['chapter_id']
-        ));
-
-        if(null === $chapter_id)
-        {
-            $errors['main'][] = 'That chapter does not exist.';
-        }
 
         if(count($errors) > 0)
         {
@@ -1145,7 +1030,7 @@ class Backend
             }
             catch(\Exception $exception)
             {
-                $errors['main'][] = MessageParser::ParseMailChimpMessage($exception->getMessage());
+                $errors['main'][] = MessageParser::ParseMailChimpMessage($exception);
                 set_transient( 'errors', $errors, 10 );
                 $field_params = $mailchimp_list->toArray();
                 redirectToPage((array('page' => 'crmc_settings','tab' => 'invitation_settings') + $field_params), "create_list");
