@@ -53,8 +53,6 @@ class Backend
 
         add_action('admin_init', array($this, 'add_admin_post_handlers'));
 
-        add_action( 'admin_init', array($this, 'remove_menu_pages'));
-
         add_action('admin_footer', array($this, 'crmc_add_modals'));
 
         add_action('acf/input/admin_head', '\CRMConnector\Service\ACF\ACFHooksFilters::admin_head');
@@ -65,37 +63,17 @@ class Backend
 
         add_filter('gettext', '\CRMConnector\Service\WP\WPHooksFilters::gettext', 10, 4);
 
+        add_filter('publish_lists', array($this, 'initialize_batch_contact_import'), 10, 2);
+
     }
 
+    public function initialize_batch_contact_import($post_id, $post)
+    {
 
-    function remove_menu_pages() {
 
-        $user = wp_get_current_user();
-        if ( in_array( 'administrator', (array) $user->roles ) ) {
-            return;
-        }
 
-        if(in_array('chapter_advisor',  (array) $user->roles ))
-        {
-            remove_menu_page('edit-comments.php');
-            remove_menu_page('bulk-delete-posts');
-            remove_menu_page('profile.php');
-            remove_menu_page('tools.php');
-            remove_menu_page('edit.php');
 
-        }
-
-        if(in_array('chapter_officer',  (array) $user->roles ))
-        {
-
-        }
-
-        if(in_array('chapter_president',  (array) $user->roles ))
-        {
-
-        }
     }
-
 
     /**
      * Setup the data property with a bunch of useful info being used all around the code

@@ -62,6 +62,8 @@ class CustomPostTypeCreator
             'has_archive'         => true,
             'exclude_from_search' => false,
             'publicly_queryable'  => true,
+            'capability_type'     => array('cap_contact','cap_contacts'),
+            'map_meta_cap'        => true,
         );
 
         // Registering your Custom Post Type
@@ -112,6 +114,8 @@ class CustomPostTypeCreator
             'has_archive'         => true,
             'exclude_from_search' => false,
             'publicly_queryable'  => true,
+            'capability_type'     => array('cap_chapter','cap_chapters'),
+            'map_meta_cap'        => true,
         );
 
         // Registering your Custom Post Type
@@ -162,6 +166,8 @@ class CustomPostTypeCreator
             'has_archive'         => true,
             'exclude_from_search' => false,
             'publicly_queryable'  => true,
+            'capability_type'     => array('cap_chapter_invitation','cap_chapter_invitations'),
+            'map_meta_cap'        => true,
         );
 
         // Registering your Custom Post Type
@@ -212,6 +218,8 @@ class CustomPostTypeCreator
             'has_archive'         => true,
             'exclude_from_search' => false,
             'publicly_queryable'  => true,
+            'capability_type'     => array('cap_drop','cap_drops'),
+            'map_meta_cap'        => true,
         );
 
         // Registering your Custom Post Type
@@ -262,6 +270,8 @@ class CustomPostTypeCreator
             'has_archive'         => true,
             'exclude_from_search' => false,
             'publicly_queryable'  => true,
+            'capability_type'     => array('cap_list','cap_lists'),
+            'map_meta_cap'        => true,
         );
 
         // Registering your Custom Post Type
