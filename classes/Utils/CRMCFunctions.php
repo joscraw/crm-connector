@@ -58,5 +58,15 @@ class CRMCFunctions
         return url_to_postid( $url );
     }
 
+    /**
+     * @param $format
+     * @return string
+     * @internal param string $format_in Example: 'Ymd'
+     * @internal param string $format_out Example: 'd-m-Y'
+     */
+    public static function current_date($format)
+    {
+        return (new \DateTime())->format($format);
+    }
 
 }

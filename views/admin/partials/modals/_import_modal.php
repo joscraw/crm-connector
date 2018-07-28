@@ -52,7 +52,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary js-import-students-button" data-nonce="<?php echo wp_create_nonce( 'crmc_import_file_nonce' ); ?>">Import Contacts</button>
+                <button type="button" class="btn btn-primary custom-button js-import-students-button" data-nonce="<?php echo wp_create_nonce( 'crmc_import_file_nonce' ); ?>">Import Contacts</button>
             </div>
         </div>
     </div>

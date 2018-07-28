@@ -26,7 +26,7 @@ class CRMCDatabaseTables
         $properties_table = $wpdb->prefix.'properties';
         $imports_table = $wpdb->prefix.'imports';
         $exports_table = $wpdb->prefix.'exports';
-        $batch_subscription_crons_table = $wpdb->prefix.'batch_subscription_crons';
+        $batch_list_export_crons_table = $wpdb->prefix.'batch_list_export_crons';
         $templates_table = $wpdb->prefix.'mailchimp_templates';
         $batch_import_contacts_crons_table = $wpdb->prefix.'batch_import_contacts_cron';
 
@@ -104,15 +104,13 @@ class CRMCDatabaseTables
             DatabaseTables::create($sql);
         }
 
-        if(!DatabaseTables::exists($batch_subscription_crons_table))
+        if(!DatabaseTables::exists($batch_list_export_crons_table))
         {
-            $sql = "CREATE TABLE $batch_subscription_crons_table (
+            $sql = "CREATE TABLE $batch_list_export_crons_table (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
-			import_id mediumint(9),
 			export_id mediumint(9),
 			list_id tinytext,
 			status tinytext,
-			type tinytext,
 			log_file tinytext,
 			failed_attempts mediumint(9) NOT NULL DEFAULT 0,
 			created_at DATETIME,
@@ -143,6 +141,7 @@ class CRMCDatabaseTables
 			database_column_names longtext,
 			selected_file_columns longtext,
 			chapter_id mediumint(9),
+			import_id mediumint(9), 
 			status tinytext,
 			file_upload_path tinytext,
 			log_file tinytext,

@@ -14,8 +14,10 @@ use CRMConnector\Api\Models\MailChimp\Template;
 use CRMConnector\Api\Models\MailChimpList;
 use CRMConnector\Concerns\Renderable;
 use CRMConnector\Crons\Initializers\BatchContactImportCronInitializer;
+use CRMConnector\Crons\Initializers\BatchListExportCronInitializer;
 use CRMConnector\Crons\Initializers\BatchSubscriptionCronInitializer;
 use CRMConnector\Crons\Models\BatchContactImportCronModel;
+use CRMConnector\Crons\Models\BatchListExportCronModel;
 use CRMConnector\Crons\Models\BatchSubscriptionCronModel;
 use CRMConnector\Service\CustomPostType\CustomPostTypeCreator;
 use finfo;
@@ -39,8 +41,6 @@ class Backend
         $this->crmc_set_initial_data();
         CustomPostTypeCreator::create();
 
-
-
         /**************************************************************
         Backend actions and hoooks
         **************************************************************/
@@ -63,16 +63,29 @@ class Backend
 
         add_filter('gettext', '\CRMConnector\Service\WP\WPHooksFilters::gettext', 10, 4);
 
-        add_filter('publish_lists', array($this, 'initialize_batch_contact_import'), 10, 2);
+        add_filter('manage_imports_posts_columns', '\CRMConnector\Service\WP\WPHooksFilters::manage_imports_posts_columns');
 
+        add_filter('manage_imports_posts_custom_column', '\CRMConnector\Service\WP\WPHooksFilters::manage_imports_posts_custom_column', 10, 2);
+
+        add_filter('manage_exports_posts_columns', '\CRMConnector\Service\WP\WPHooksFilters::manage_exports_posts_columns');
+
+        add_filter('manage_exports_posts_custom_column', '\CRMConnector\Service\WP\WPHooksFilters::manage_exports_posts_custom_column', 10, 2);
+
+        add_filter('post_updated_messages', '\CRMConnector\Service\WP\WPHooksFilters::update_messages', 10, 1 );
+
+        add_filter('publish_lists', array($this, 'initialize_batch_list_export'), 10, 2);
     }
 
-    public function initialize_batch_contact_import($post_id, $post)
+    /**
+     * @param $post_id
+     * @param $post
+     */
+    public function initialize_batch_list_export($post_id, $post)
     {
+        $model = new BatchListExportCronModel();
 
-
-
-
+        $model->setListId($post_id);
+        BatchListExportCronInitializer::enqueue_cron($model);
     }
 
     /**
@@ -85,15 +98,6 @@ class Backend
         $this->data['plugin_path'] = dirname(dirname(__FILE__)) . '/';
 
         $this->data['admin_url'] = admin_url();
-
-
-       /* global $my_admin_page;
-        global $post;
-        $screen = get_current_screen();
-
-        if ( is_admin() && ($screen->id == 'chapters') ) {
-            $this->data['chapter_id'] = $post->ID;;
-        }*/
     }
 
     public function add_admin_scripts()
@@ -707,8 +711,10 @@ class Backend
             exit;
         }
 
-        if($model->move_file() && BatchContactImportCronInitializer::enqueue_cron($model))
+        if($model->move_file())
         {
+            BatchContactImportCronInitializer::enqueue_cron($model);
+
             $result = $this->json_response();
             $result['notices'] = ["File Successfully Added to Queue For Importing!"];
             echo json_encode($result);

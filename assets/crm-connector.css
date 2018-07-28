@@ -13,6 +13,20 @@
     margin-bottom: 20px;
 }
 
+.custom-button {
+    background-color: #941b21 !important;
+    color: #FFF !important;
+    border: 1px solid #941b21;
+}
+
+.custom-button:hover {
+    background-color: #a83636 !important;
+    border: 1px solid #a83636 !important;
+}
+
+#importModal {
+    margin-top: 50px;
+}
 
 .ais-search-box {
     max-width: none;
@@ -46,7 +60,7 @@
     margin: -75px 0 0 -75px;
     border: 16px solid #f3f3f3;
     border-radius: 50%;
-    border-top: 16px solid #3498db;
+    border-top: 16px solid #a83636;
     width: 120px;
     height: 120px;
     -webkit-animation: spin 2s linear infinite;

@@ -16,6 +16,8 @@ class CustomPostTypeCreator
         self::create_chapter_invitations_posttype();
         self::create_drop_posttype();
         self::create_list_posttype();
+        self::create_import_posttype();
+        self::create_export_posttype();
     }
 
     private function create_contact_posttype() {
@@ -276,5 +278,115 @@ class CustomPostTypeCreator
 
         // Registering your Custom Post Type
         register_post_type( 'lists', $args );
+    }
+
+    private static function create_import_posttype() {
+
+        // Set UI labels for Custom Post Type
+        $labels = array(
+            'name'                => 'Imports',
+            'singular_name'       => 'Import',
+            'menu_name'           => 'Imports',
+            'parent_item_colon'   => 'Parent Imports',
+            'all_items'           => 'All Imports',
+            'view_item'           => 'View Imports',
+            'add_new_item'        => 'Add New Import',
+            'add_new'             => 'Add New',
+            'edit_item'           => 'Edit Import',
+            'update_item'         => 'Update Import',
+            'search_items'        => 'Search Imports',
+            'not_found'           => 'Not Found',
+            'not_found_in_trash'  => 'Not found in Trash',
+        );
+
+        // Set other options for Custom Post Type
+
+        $args = array(
+            'label'               => 'imports',
+            'description'         => 'imports',
+            'labels'              => $labels,
+            // Features this CPT supports in Post Editor
+            'supports'            => array( 'custom-fields' ),
+            // You can associate this CPT with a taxonomy or custom taxonomy.
+            'taxonomies'          => array(),
+            /* A hierarchical CPT is like Pages and can have
+            * Parent and child items. A non-hierarchical CPT
+            * is like Posts.
+            */
+            'hierarchical'        => false,
+            'public'              => true,
+            'show_ui'             => true,
+            'show_in_menu'        => true,
+            'show_in_nav_menus'   => true,
+            'show_in_admin_bar'   => true,
+            'menu_position'       => 5,
+            'can_export'          => true,
+            'has_archive'         => true,
+            'exclude_from_search' => false,
+            'publicly_queryable'  => true,
+            'capability_type'     => array('cap_import','cap_imports'),
+            'map_meta_cap'        => true,
+            'capabilities' => array(
+                'create_posts' => false
+            )
+        );
+
+        // Registering your Custom Post Type
+        register_post_type( 'imports', $args );
+    }
+
+    private static function create_export_posttype() {
+
+        // Set UI labels for Custom Post Type
+        $labels = array(
+            'name'                => 'Exports',
+            'singular_name'       => 'Export',
+            'menu_name'           => 'Exports',
+            'parent_item_colon'   => 'Parent Exports',
+            'all_items'           => 'All Exports',
+            'view_item'           => 'View Exports',
+            'add_new_item'        => 'Add New Export',
+            'add_new'             => 'Add New',
+            'edit_item'           => 'Edit Export',
+            'update_item'         => 'Update Export',
+            'search_items'        => 'Search Exports',
+            'not_found'           => 'Not Found',
+            'not_found_in_trash'  => 'Not found in Trash',
+        );
+
+        // Set other options for Custom Post Type
+
+        $args = array(
+            'label'               => 'exports',
+            'description'         => 'exports',
+            'labels'              => $labels,
+            // Features this CPT supports in Post Editor
+            'supports'            => array( 'custom-fields' ),
+            // You can associate this CPT with a taxonomy or custom taxonomy.
+            'taxonomies'          => array(),
+            /* A hierarchical CPT is like Pages and can have
+            * Parent and child items. A non-hierarchical CPT
+            * is like Posts.
+            */
+            'hierarchical'        => false,
+            'public'              => true,
+            'show_ui'             => true,
+            'show_in_menu'        => true,
+            'show_in_nav_menus'   => true,
+            'show_in_admin_bar'   => true,
+            'menu_position'       => 5,
+            'can_export'          => true,
+            'has_archive'         => true,
+            'exclude_from_search' => false,
+            'publicly_queryable'  => true,
+            'capability_type'     => array('cap_export','cap_exports'),
+            'map_meta_cap'        => true,
+            'capabilities' => array(
+                'create_posts' => false
+            )
+        );
+
+        // Registering your Custom Post Type
+        register_post_type( 'exports', $args );
     }
 }

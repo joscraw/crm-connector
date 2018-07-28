@@ -10,12 +10,11 @@ require( dirname( __FILE__ ) . '/../../../../wp-load.php' );
 
 global $wpdb;
 
-$name = "Josh";
 
-$results = $wpdb->get_results(sprintf("SELECT id, database_column_names, selected_file_columns, chapter_id, file_upload_path FROM %s%s WHERE status = '%s' AND failed_attempts <= 3 ORDER BY created_at DESC",
+$results = $wpdb->get_results(sprintf("SELECT id, import_id, database_column_names, selected_file_columns, chapter_id, file_upload_path FROM %s%s WHERE status = '%s' AND failed_attempts <= 3 ORDER BY created_at DESC",
     $wpdb->prefix,
     'batch_import_contacts_cron',
-    'IN_PROGRESS'
+    'IN_QUEUE'
 ));
 
 
@@ -24,6 +23,7 @@ foreach($results as $result) {
     // and assume that it will succeed
     $import_failed = false;
     $cron_id = $result->id;
+    $import_id = $result->import_id;
     $database_column_names= unserialize($result->database_column_names);
     $selected_file_columns = unserialize($result->selected_file_columns);
     $chapter_id = $result->chapter_id;
@@ -33,8 +33,8 @@ foreach($results as $result) {
 
     $logger->write(sprintf("Initializing Cron with id %s...", $cron_id));
 
-    BatchContactImportCronInitializer::set_log_file($cron_id, $logger);
-    BatchContactImportCronInitializer::progress_cron($cron_id);
+    BatchContactImportCronInitializer::set_log_file($cron_id, $import_id, $logger);
+    BatchContactImportCronInitializer::progress_cron($cron_id, $import_id);
 
     try
     {
@@ -45,7 +45,7 @@ foreach($results as $result) {
     {
         $logger->write(sprintf("Failed Loading Spreadsheet - %s...", $exception->getMessage()));
         $logger->write(sprintf("Terminating Process..."));
-        BatchContactImportCronInitializer::fail_cron($cron_id);
+        BatchContactImportCronInitializer::fail_cron($cron_id, $import_id);
         continue;
     }
 
@@ -76,26 +76,42 @@ foreach($results as $result) {
     }
 
     $logger->write(sprintf("Inserting %s Contact Records Into Database Table wp_posts...", count($transformed_records)));
+    $i = 0;
     foreach($transformed_records as $transformed_record)
     {
         // Insert the default data that Wordpress requires for a post
-        $post_id = wp_insert_post([
+        $result = wp_insert_post([
             "post_title"    =>  $transformed_record['full_name'],
             "post_type"     =>  'contacts',
             "post_status"   =>  'publish',
-        ]);
+        ], true);
+
+        if($result instanceof WP_Error)
+        {
+            $error_messages = implode(',', $result->get_error_messages());
+            $logger->write(sprintf("Error Creating Contact %s. WP Error Messages: %s", $transformed_record['full_name'], $error_messages));
+            continue;
+        }
+
+        $post_id = $result;
 
         // Insert the Advanced Custom Fields data next
         foreach($transformed_record as $field => $value)
         {
-            update_field($field, $value, $post_id);
+            if(!update_field($field, $value, $post_id))
+            {
+                $logger->write(sprintf("Error Inserting Field: %s With Value: %s For Post: %s", $field, $value, $post_id));
+            }
         }
+
+        if(++$i % 20 === 0)
+            $logger->write(sprintf("Inserted %s Contact Records Into Database Table wp_posts...", $i));
 
     }
 
     $logger->write(sprintf("Finished Inserting %s Contact Records into Database Table wp_posts...", count($transformed_records)));
     $logger->write(sprintf("Finished Cron %s.", $cron_id));
 
-    BatchContactImportCronInitializer::succeed_cron($cron_id);
+    BatchContactImportCronInitializer::succeed_cron($cron_id, $import_id);
 
 }
