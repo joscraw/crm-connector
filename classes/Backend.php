@@ -17,12 +17,17 @@ use CRMConnector\Crons\Initializers\BatchContactImportCronInitializer;
 use CRMConnector\Crons\Initializers\BatchSubscriptionCronInitializer;
 use CRMConnector\Crons\Models\BatchContactImportCronModel;
 use CRMConnector\Crons\Models\BatchSubscriptionCronModel;
+use CRMConnector\Service\CustomPostType\CustomPostTypeCreator;
 use finfo;
 use CRMConnector\Utils\CRMCFunctions;
 use CRMConnector\Api\GuzzleFactory;
 use CRMConnector\Api\HubSpot;
 use WP_Query;
 
+/**
+ * Class Backend
+ * @package CRMConnector
+ */
 class Backend
 {
     use Renderable;
@@ -32,6 +37,9 @@ class Backend
     public function __construct()
     {
         $this->crmc_set_initial_data();
+        CustomPostTypeCreator::create();
+
+
 
         /**************************************************************
         Backend actions and hoooks
@@ -45,9 +53,49 @@ class Backend
 
         add_action('admin_init', array($this, 'add_admin_post_handlers'));
 
+        add_action( 'admin_init', array($this, 'remove_menu_pages'));
+
         add_action('admin_footer', array($this, 'crmc_add_modals'));
 
+        add_action('acf/input/admin_head', '\CRMConnector\Service\ACF\ACFHooksFilters::admin_head');
+
+        add_action('admin_head','\CRMConnector\Service\WP\WPHooksFilters::admin_head');
+
+        add_filter('wp_insert_post_data', '\CRMConnector\Service\WP\WPHooksFilters::insert_post_data', 10, 2);
+
+        add_filter('gettext', '\CRMConnector\Service\WP\WPHooksFilters::gettext', 10, 4);
+
     }
+
+
+    function remove_menu_pages() {
+
+        $user = wp_get_current_user();
+        if ( in_array( 'administrator', (array) $user->roles ) ) {
+            return;
+        }
+
+        if(in_array('chapter_advisor',  (array) $user->roles ))
+        {
+            remove_menu_page('edit-comments.php');
+            remove_menu_page('bulk-delete-posts');
+            remove_menu_page('profile.php');
+            remove_menu_page('tools.php');
+            remove_menu_page('edit.php');
+
+        }
+
+        if(in_array('chapter_officer',  (array) $user->roles ))
+        {
+
+        }
+
+        if(in_array('chapter_president',  (array) $user->roles ))
+        {
+
+        }
+    }
+
 
     /**
      * Setup the data property with a bunch of useful info being used all around the code

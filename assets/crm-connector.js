@@ -144,9 +144,11 @@
         }.bind(this))
             .done(function(r,status,jqXHR) {
 
+
+                // . js-column-name-container
                 debugger;
                 this.ajaxRemoveLoadingSpinnerFromContainer(".js-import-modal .js-modal-body");
-                $form.find('.js-column-name-container').html();
+                $form.find('.js-column-name-container').html("");
                 var response = JSON.parse(r);
                 $(response['columns']).each(function(index, column) {
                     var prototype =  $form.data('prototype-import-mapping-form');
@@ -160,7 +162,7 @@
                     mapping.unshift('<option value="" disabled selected>Select your option</option>');
                     prototype = prototype.replace(/\{\{database_column_names\}\}/g, mapping.join(''));
 
-                    $form.append(prototype);
+                    $form.find('.js-column-name-container').append(prototype);
 
                 });
 
@@ -222,6 +224,7 @@
                 }, 200);
 
                 var response = JSON.parse(r);
+
                 this.ajaxRemoveLoadingSpinnerFromContainer(".js-import-modal .js-modal-body");
                 this.ajaxRemoveLoadingDots(".js-import-students-button");
                 this.ajaxRenderNoticesAndErrors(response, ".js-import-modal .js-modal-body");

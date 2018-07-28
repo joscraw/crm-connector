@@ -15,6 +15,16 @@ class CRMCFunctions
     }
 
     /**
+     * URL to the root directory of the CRMC plugin
+     *
+     * @return string
+     */
+    public static function plugin_url()
+    {
+        return plugins_url() . '/crm-connector';
+    }
+
+    /**
      * @return string
      */
     public static function get_environment()
