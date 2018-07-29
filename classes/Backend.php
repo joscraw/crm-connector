@@ -26,6 +26,18 @@ use CRMConnector\Api\GuzzleFactory;
 use CRMConnector\Api\HubSpot;
 use WP_Query;
 
+/*phpinfo();
+
+die();*/
+
+/*ini_set('display_startup_errors',1);
+ini_set('display_errors',1);
+error_reporting(-1);*/
+
+ini_set("log_errors", 1);
+ini_set("error_log", "/tmp/php-error.log");
+ini_set('memory_limit', '256M');
+
 /**
  * Class Backend
  * @package CRMConnector
@@ -826,8 +838,11 @@ class Backend
             exit;
         }
 
+
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($_FILES['studentFile']['tmp_name']);
+
         $rows = $spreadsheet->getActiveSheet()->toArray();
+
         $columnNames = array_shift($rows);
         $student_import_file_mapping = get_option('student_import_file_mapping');
 
