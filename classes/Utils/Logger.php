@@ -47,7 +47,7 @@ class Logger
      */
     private function generate_log_file_name()
     {
-        return date('m-d-Y_hia') . '.log';
+        return date('m-d-Y_h:i:s_a') . '.log';
     }
 
 }

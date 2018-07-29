@@ -217,6 +217,30 @@ class MailChimp
 
     /**
      * @param Creds $creds
+     * @param $list_id
+     * @return mixed
+     */
+    public function get_list(Creds $creds, $list_id)
+    {
+        $mailchimp_client = GuzzleFactory::get_mailchimp_instance([
+            "base_uri" => "https://{$creds->data_center}.api.mailchimp.com"
+        ]);
+
+        $response = $mailchimp_client->get(
+            sprintf("{$this->api_version}/lists/%s", $list_id),
+            [
+                'auth' => $creds->toArray(),
+                'headers' => [
+                    'Accept'     => 'application/json',
+                    'content-type' =>  'application/json'
+                ]
+            ]);
+
+        return $response;
+    }
+
+    /**
+     * @param Creds $creds
      * @param $members
      * @param $list_id
      */

@@ -19,9 +19,9 @@ class ListPostType
     private $is_export_from_chapter;
 
     /**
-     * @var integer
+     * @var array
      */
-    private $chapter;
+    private $chapters;
 
     /**
      * @var integer
@@ -32,6 +32,11 @@ class ListPostType
      * @var array
      */
     private $query_args = [];
+
+    /**
+     * @var string
+     */
+    private $mailchimp_list_id;
 
     /**
      * @return string
@@ -64,26 +69,22 @@ class ListPostType
     {
         $this->is_export_from_chapter = ($export_from_chapter === 'yes') ? true : false;
 
-        if(!$this->is_export_from_chapter)
-        {
-
-        }
     }
 
     /**
-     * @return int
+     * @return array
      */
-    public function getChapter()
+    public function getChapters()
     {
-        return $this->chapter;
+        return $this->chapters;
     }
 
     /**
-     * @param int $chapter
+     * @param array $chapters
      */
-    public function setChapter($chapter)
+    public function setChapters($chapters)
     {
-        $this->chapter = (int) unserialize($chapter)[0];
+        $this->chapters = unserialize($chapters);
     }
 
     /**
@@ -101,6 +102,24 @@ class ListPostType
     {
         $this->num_query_fields = (int) $num_query_fields;
     }
+
+    /**
+     * @return string
+     */
+    public function getMailchimpListId()
+    {
+        return $this->mailchimp_list_id;
+    }
+
+    /**
+     * @param string $mailchimp_list_id
+     */
+    public function setMailchimpListId($mailchimp_list_id)
+    {
+        $this->mailchimp_list_id = $mailchimp_list_id;
+    }
+
+
 
     /**
      * @param $query_args
@@ -161,10 +180,13 @@ class ListPostType
             $this->setIsExportFromChapter($list['export_from_chapter'][0]);
 
         if(isset($list['chapter']))
-            $this->setChapter($list['chapter'][0]);
+            $this->setChapters($list['chapter'][0]);
 
         if(isset($list['create_custom_export_query_fields']))
             $this->setNumQueryFields($list['create_custom_export_query_fields'][0]);
+
+        if(isset($list['mailchimp_list_id']))
+            $this->setMailchimpListId($list['mailchimp_list_id'][0]);
 
         for($i = 0; $i < $this->getNumQueryFields(); $i++)
         {

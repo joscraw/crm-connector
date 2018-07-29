@@ -1,0 +1,27 @@
+User:  - July 29, 2018, 8:02 am
+Attempt: Initializing Cron with id 25...
+-------------------------
+User:  - July 29, 2018, 8:02 am
+Attempt: Initializing Custom Export...
+-------------------------
+User:  - July 29, 2018, 8:02 am
+Attempt: Querying Database for contacts with specified args: {"post_type":"contacts","posts_per_page":-1,"meta_query":{"relation":"AND","0":{"key":"full_name","compare":"LIKE","value":"David"}}}...
+-------------------------
+User:  - July 29, 2018, 8:02 am
+Attempt: Found Contacts. Total Contacts Found: 33...
+-------------------------
+User:  - July 29, 2018, 8:02 am
+Attempt: De-duplicating Contacts...
+-------------------------
+User:  - July 29, 2018, 8:02 am
+Attempt: Contact Count After De-duplicating: 33...
+-------------------------
+User:  - July 29, 2018, 8:02 am
+Attempt: Subscribing 33 email addresses to MailChimp
+-------------------------
+User:  - July 29, 2018, 8:02 am
+Attempt: Successfully Subscribed 33 email addresses to MailChimp...
+-------------------------
+User:  - July 29, 2018, 8:02 am
+Attempt: Import Finished...
+-------------------------

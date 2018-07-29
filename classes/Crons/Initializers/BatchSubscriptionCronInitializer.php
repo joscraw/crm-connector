@@ -59,7 +59,7 @@ class BatchSubscriptionCronInitializer
     {
         global $wpdb;
 
-        $wpdb->query(sprintf("UPDATE %s%s set status='%s' failed_attempts=failed_attempts + 1 WHERE id= %s",
+        $wpdb->query(sprintf("UPDATE %s%s set status='%s', failed_attempts=failed_attempts + 1 WHERE id= %s",
             $wpdb->prefix,
             'batch_subscription_crons',
             'FAILED',
