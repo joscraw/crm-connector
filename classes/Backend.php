@@ -153,7 +153,7 @@ class Backend
     public function crmc_connector_menu()
     {
         add_menu_page(__( 'CRM Connector', 'textdomain' ), 'CRM Connector', 'manage_options', 'crmc_settings', array($this, 'crmc_settings'), '', 1);
-        add_menu_page( 'MailChimp Settings', 'MailChimp', 'manage_options', 'mail_chimp_settings', array($this, 'mailchimp_settings_page') );
+        add_menu_page( 'MailChimp Settings', 'MailChimp', 'mailchimp_settings', 'mail_chimp_settings', array($this, 'mailchimp_settings_page') );
 
         global $menu;
         $menu[1][2] = "admin.php?page=crmc_settings&tab=contacts";
