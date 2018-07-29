@@ -53,6 +53,8 @@ class Backend
 
         add_action('admin_init', array($this, 'add_admin_post_handlers'));
 
+        add_action( 'admin_init', '\CRMConnector\Service\WP\WPHooksFilters::mailchimp_settings_page');
+
         add_action('admin_footer', array($this, 'crmc_add_modals'));
 
         add_action('acf/input/admin_head', '\CRMConnector\Service\ACF\ACFHooksFilters::admin_head');
@@ -74,6 +76,9 @@ class Backend
         add_filter('post_updated_messages', '\CRMConnector\Service\WP\WPHooksFilters::update_messages', 10, 1 );
 
         add_filter('publish_lists', array($this, 'initialize_batch_list_export'), 10, 2);
+
+        add_action( 'admin_notices', '\CRMConnector\Service\WP\WPHooksFilters::admin_notices');
+
     }
 
     /**
@@ -83,8 +88,16 @@ class Backend
     public function initialize_batch_list_export($post_id, $post)
     {
         $model = new BatchListExportCronModel();
-
         $model->setListId($post_id);
+
+        if(!$model->is_valid())
+        {
+            set_transient('errors', $model->errors(), 20);
+            return;
+        }
+
+        set_transient('notice', 'Successfully Added List to Queue For Export');
+
         BatchListExportCronInitializer::enqueue_cron($model);
     }
 
@@ -140,9 +153,28 @@ class Backend
     public function crmc_connector_menu()
     {
         add_menu_page(__( 'CRM Connector', 'textdomain' ), 'CRM Connector', 'manage_options', 'crmc_settings', array($this, 'crmc_settings'), '', 1);
+        add_menu_page( 'MailChimp Settings', 'MailChimp', 'manage_options', 'mail_chimp_settings', array($this, 'mailchimp_settings_page') );
 
         global $menu;
         $menu[1][2] = "admin.php?page=crmc_settings&tab=contacts";
+    }
+
+    public function mailchimp_settings_page() {
+        ?>
+
+        <form action='options.php' method='post'>
+
+            <?php
+            settings_fields( 'pluginPage' );
+            do_settings_sections( 'pluginPage' );
+            submit_button();
+            ?>
+
+        </form>
+
+        <p class="help-block"><a target="_blank" href="https://us1.admin.mailchimp.com/account/api/?_ga=2.194016621.1157657947.1531760872-769419101.1517934903">Here</a> to obtain your API Keys</p>
+
+        <?php
     }
 
     public function crmc_settings()

@@ -147,7 +147,7 @@ class WPHooksFilters
     {
         $msg[ 'lists' ] = array (
             0 => '', // Unused. Messages start at index 1.
-            1 => "Successfully Added List to Queue For Export",
+            1 => "List Successfully Updated",
             // or simply "Actor updated.",
             // natural language "The actor's profile has been updated successfully.",
             // or what you need "Actor updated, so remember to check also <strong>the films list</strong>."
@@ -156,19 +156,89 @@ class WPHooksFilters
             2 => 'Custom field updated.',  // Probably better do not touch
             3 => 'Custom field deleted.',  // Probably better do not touch
 
-            4 => "Actor's profile updated.",
+            4 => "List Successfully Updated",
             5 => "List restored to revision",
-            6 => "List's published.",
+            6 => "List's Successfully Created",
             // you can use the kind of messages that better fits with your needs
             // 6 => "Good boy, one more... so, 4,999,999 are to reach IMDB.",
             // 6 => "This actor is already on the website.",
             // 6 => "Congratulations, a new Actor's profile has been published.",
 
-            7 => "Successfully Added List to Queue For Export",
-            8 => "Successfully Added List to Queue For Export",
-            9 => "Successfully Added List to Queue For Export",
-            10 => "Successfully Added List to Queue For Export",
+            7 => "List Successfully Created",
+            8 => "List Successfully Created",
+            9 => "List Successfully Created",
+            10 => "List Successfully Created",
         );
         return $msg;
+    }
+
+    public static function admin_notices()
+    {
+        $screen = get_current_screen();
+        $errors = get_transient('errors');
+        $notice = get_transient('notice');
+
+        if('lists' == $screen->post_type && in_array($screen->base, ['edit', 'post'])){
+
+            if (!empty($errors)){?>
+                <div class="error">
+                <p><?php echo implode(",", $errors); ?></p>
+                </div>
+                <?php
+            }
+
+            if($notice)
+            {
+                ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php echo $notice; ?></p>
+                </div>
+                <?php
+            }
+
+        }
+
+        delete_transient('notice');
+        delete_transient('errors');
+    }
+
+    public static function mailchimp_settings_page()
+    {
+        register_setting( 'pluginPage', 'crmc_settings' );
+
+        add_settings_section(
+            'crmc_pluginPage_section',
+            __( 'MailChimp API Settings', 'wordpress' ),
+            function(){},
+            'pluginPage'
+        );
+
+        add_settings_field(
+            'mailchimp_username',
+            __( 'MailChimp Username', 'wordpress' ),
+            function()
+            {
+                $options = get_option( 'crmc_settings' );
+                ?>
+                <input type='text' name='crmc_settings[mailchimp_username]' value='<?php echo $options['mailchimp_username']; ?>'>
+                <?php
+            },
+            'pluginPage',
+            'crmc_pluginPage_section'
+        );
+
+        add_settings_field(
+            'mailchimp_api_key',
+            __( 'MailChimp API Key', 'wordpress' ),
+            function()
+            {
+                $options = get_option( 'crmc_settings' );
+                ?>
+                <input type='text' name='crmc_settings[mailchimp_api_key]' value='<?php echo $options['mailchimp_api_key']; ?>'>
+                <?php
+            },
+            'pluginPage',
+            'crmc_pluginPage_section'
+        );
     }
 }

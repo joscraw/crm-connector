@@ -49,7 +49,8 @@ class BatchListExportCronModel
      */
     public function is_valid()
     {
-        $this->validate_list_id();
+        $this->validate_list_id()
+            ->validate_mailchimp_creds();
 
         return count($this->errors) === 0;
     }
@@ -58,8 +59,21 @@ class BatchListExportCronModel
     {
         if(empty($this->list_id))
         {
-            $this->errors['main'][] = 'Invalid form submission.';
+            $this->errors[] = 'Invalid form submission.';
         }
+
+        return $this;
+    }
+
+    private function validate_mailchimp_creds()
+    {
+        $settings = get_option( 'crmc_settings' );
+
+        if(!isset($settings['mailchimp_username']) || !isset($settings['mailchimp_api_key']) || $settings['mailchimp_username'] === '' || $settings['mailchimp_api_key'] === '')
+        {
+            $this->errors[] = 'Your MailChimp Username and API Key Must Be Set Before This List Gets Synced To MailChimp! Add Those and Then Come Back and Re-Export This List!';
+        }
+
         return $this;
     }
 }
