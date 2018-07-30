@@ -18,6 +18,7 @@ class CustomPostTypeCreator
         self::create_list_posttype();
         self::create_import_posttype();
         self::create_export_posttype();
+        self::create_chapter_summary_posttype();
     }
 
     private function create_contact_posttype() {
@@ -326,9 +327,6 @@ class CustomPostTypeCreator
             'publicly_queryable'  => true,
             'capability_type'     => array('cap_import','cap_imports'),
             'map_meta_cap'        => true,
-            'capabilities' => array(
-                'create_posts' => false
-            )
         );
 
         // Registering your Custom Post Type
@@ -381,12 +379,67 @@ class CustomPostTypeCreator
             'publicly_queryable'  => true,
             'capability_type'     => array('cap_export','cap_exports'),
             'map_meta_cap'        => true,
-            'capabilities' => array(
-                'create_posts' => false
-            )
+            /*'capabilities' => array(
+                'create_posts' => 'do_not_allow', // false < WP 4.5, credit @Ewout
+            ),*/
         );
 
         // Registering your Custom Post Type
         register_post_type( 'exports', $args );
+    }
+
+    private static function create_chapter_summary_posttype() {
+
+        // Set UI labels for Custom Post Type
+        $labels = array(
+            'name'                => 'Chapter Summaries',
+            'singular_name'       => 'Chapter Summary',
+            'menu_name'           => 'Chapter Summaries',
+            'parent_item_colon'   => 'Parent Chapter Summaries',
+            'all_items'           => 'All Chapter Summaries',
+            'view_item'           => 'View Chapter Summaries',
+            'add_new_item'        => 'Add New Chapter Summary',
+            'add_new'             => 'Add New',
+            'edit_item'           => 'Edit Chapter Summary',
+            'update_item'         => 'Update Chapter Summary',
+            'search_items'        => 'Search Chapter Summaries',
+            'not_found'           => 'Not Found',
+            'not_found_in_trash'  => 'Not found in Trash',
+        );
+
+        // Set other options for Custom Post Type
+
+        $args = array(
+            'label'               => 'chapter_summaries',
+            'description'         => 'Chapter Summaries',
+            'labels'              => $labels,
+            // Features this CPT supports in Post Editor
+            'supports'            => array( 'custom-fields' ),
+            // You can associate this CPT with a taxonomy or custom taxonomy.
+            'taxonomies'          => array(),
+            /* A hierarchical CPT is like Pages and can have
+            * Parent and child items. A non-hierarchical CPT
+            * is like Posts.
+            */
+            'hierarchical'        => false,
+            'public'              => true,
+            'show_ui'             => true,
+            'show_in_menu'        => true,
+            'show_in_nav_menus'   => true,
+            'show_in_admin_bar'   => true,
+            'menu_position'       => 5,
+            'can_export'          => true,
+            'has_archive'         => true,
+            'exclude_from_search' => false,
+            'publicly_queryable'  => true,
+            'capability_type'     => array('cap_chapter_summary','cap_chapter_summaries'),
+            'map_meta_cap'        => true,
+            /*'capabilities' => array(
+                'create_posts' => 'do_not_allow', // false < WP 4.5, credit @Ewout
+            ),*/
+        );
+
+        // Registering your Custom Post Type
+        register_post_type( 'chapter_summaries', $args );
     }
 }
