@@ -47,7 +47,7 @@ class CustomPostTypeCreator
             'description'         => 'Imported Contacts',
             'labels'              => $labels,
             // Features this CPT supports in Post Editor
-            'supports'            => array( 'custom-fields', ),
+            'supports'            => array( 'title', 'custom-fields' ),
             // You can associate this CPT with a taxonomy or custom taxonomy.
             'taxonomies'          => array( 'chapters' ),
             /* A hierarchical CPT is like Pages and can have
@@ -99,7 +99,7 @@ class CustomPostTypeCreator
             'description'         => 'Imported Chapters',
             'labels'              => $labels,
             // Features this CPT supports in Post Editor
-            'supports'            => array('custom-fields'),
+            'supports'            => array( 'title', 'custom-fields'),
             // You can associate this CPT with a taxonomy or custom taxonomy.
             'taxonomies'          => array(),
             /* A hierarchical CPT is like Pages and can have
@@ -151,7 +151,7 @@ class CustomPostTypeCreator
             'description'         => 'Imported Chapter Invitations',
             'labels'              => $labels,
             // Features this CPT supports in Post Editor
-            'supports'            => array( 'custom-fields' ),
+            'supports'            => array( 'title', 'custom-fields' ),
             // You can associate this CPT with a taxonomy or custom taxonomy.
             'taxonomies'          => array(),
             /* A hierarchical CPT is like Pages and can have
@@ -203,7 +203,7 @@ class CustomPostTypeCreator
             'description'         => 'drops',
             'labels'              => $labels,
             // Features this CPT supports in Post Editor
-            'supports'            => array( 'custom-fields' ),
+            'supports'            => array( 'title', 'custom-fields' ),
             // You can associate this CPT with a taxonomy or custom taxonomy.
             'taxonomies'          => array(),
             /* A hierarchical CPT is like Pages and can have
@@ -255,7 +255,7 @@ class CustomPostTypeCreator
             'description'         => 'lists',
             'labels'              => $labels,
             // Features this CPT supports in Post Editor
-            'supports'            => array( 'custom-fields' ),
+            'supports'            => array( 'title', 'custom-fields' ),
             // You can associate this CPT with a taxonomy or custom taxonomy.
             'taxonomies'          => array(),
             /* A hierarchical CPT is like Pages and can have
@@ -414,7 +414,7 @@ class CustomPostTypeCreator
             'description'         => 'Chapter Summaries',
             'labels'              => $labels,
             // Features this CPT supports in Post Editor
-            'supports'            => array( 'custom-fields' ),
+            'supports'            => array( 'title', 'custom-fields' ),
             // You can associate this CPT with a taxonomy or custom taxonomy.
             'taxonomies'          => array(),
             /* A hierarchical CPT is like Pages and can have

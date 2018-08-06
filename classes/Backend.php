@@ -67,13 +67,13 @@ class Backend
 
         add_action( 'admin_init', '\CRMConnector\Service\WP\WPHooksFilters::mailchimp_settings_page');
 
+        add_action('admin_init', array($this, 'hide_menu_items_per_role'));
+
         add_action('admin_footer', array($this, 'crmc_add_modals'));
 
         add_action('acf/input/admin_head', '\CRMConnector\Service\ACF\ACFHooksFilters::admin_head');
 
         add_action('admin_head','\CRMConnector\Service\WP\WPHooksFilters::admin_head');
-
-        add_filter('wp_insert_post_data', '\CRMConnector\Service\WP\WPHooksFilters::insert_post_data', 10, 2);
 
         add_filter('gettext', '\CRMConnector\Service\WP\WPHooksFilters::gettext', 10, 4);
 
@@ -91,6 +91,19 @@ class Backend
 
         add_action( 'admin_notices', '\CRMConnector\Service\WP\WPHooksFilters::admin_notices');
 
+    }
+
+    public function hide_menu_items_per_role()
+    {
+        $user = wp_get_current_user();
+        if ( !in_array( 'administrator', (array) $user->roles ) ) {
+
+            remove_menu_page('bulk-delete-posts');
+            remove_menu_page('export_personal_data');
+            remove_menu_page('options-general.php');
+            remove_menu_page('tools.php');
+            remove_menu_page('edit.php?post_type=acf-field-group');
+        }
     }
 
     /**

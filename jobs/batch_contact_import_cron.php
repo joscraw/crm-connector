@@ -17,6 +17,21 @@ $results = $wpdb->get_results(sprintf("SELECT id, import_id, database_column_nam
     'IN_QUEUE'
 ));
 
+if(update_field('full_name', 'Josh K',25980))
+{
+    $n = "Josh";
+}
+
+if(update_field('full_name', 'hello ',25983))
+{
+    $n = "Josh";
+}
+
+if(update_field('full_name', 'world',25984))
+{
+    $n = "Josh";
+}
+
 
 foreach($results as $result) {
     // Let's set the default import failed status to false.
@@ -75,6 +90,60 @@ foreach($results as $result) {
         $transformed_records[] = ContactTransformer::transform_record($record);
     }
 
+    $logger->write(sprintf("Updating Contact Records In Database Table wp_posts..."));
+    $contacts_updated = 0;
+    $duplicate_contacts_found = 0;
+    $pre_existing_emails = [];
+
+        $args = [
+            'post_type' => 'contacts',
+            'posts_per_page' => -1 ,
+            'meta_query' => [
+                [
+                    'meta_key' => 'chapter',
+                    'meta_value' => $chapter_id
+                ]
+            ]
+        ];
+
+        $query = new WP_Query($args);
+
+        if ( $query->have_posts() )
+        {
+            while ( $query->have_posts() ) {
+                $query->the_post();
+                $pre_existing_emails[get_the_ID()] = get_post_meta( get_the_ID(), 'email', true);
+            }
+        }
+        wp_reset_query();
+
+    foreach($transformed_records as $key => $transformed_record)
+    {
+        if(in_array($transformed_record['email'], $pre_existing_emails))
+        {
+            $post_id = array_search($transformed_record['email'], $pre_existing_emails);
+
+            $fields_updated_for_contact = 0;
+            foreach($transformed_record as $field => $value)
+            {
+                if(update_field($field, $value, $post_id))
+                {
+                    $fields_updated_for_contact++;
+                    $logger->write(sprintf("Updating Field: %s With Value: %s For Post: %s", $field, $value, $post_id));
+                }
+            }
+
+            if($fields_updated_for_contact > 0)
+            {
+                $contacts_updated++;
+            }
+
+            $duplicate_contacts_found++;
+
+            unset($transformed_records[$key]);
+        }
+    }
+
     $logger->write(sprintf("Inserting %s Contact Records Into Database Table wp_posts...", count($transformed_records)));
     $i = 0;
     foreach($transformed_records as $transformed_record)
@@ -109,6 +178,8 @@ foreach($results as $result) {
 
     }
 
+    $logger->write(sprintf("Finished Updating %s Contact Records in Database Table wp_posts...", $contacts_updated));
+    $logger->write(sprintf("Total Duplicate Contacts Found: %s...", $duplicate_contacts_found));
     $logger->write(sprintf("Finished Inserting %s Contact Records into Database Table wp_posts...", count($transformed_records)));
     $logger->write(sprintf("Finished Cron %s.", $cron_id));
 

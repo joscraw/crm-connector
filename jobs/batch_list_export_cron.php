@@ -53,7 +53,7 @@ foreach($results as $result) {
     {
         $logger->write(sprintf("Fatal Error: MailChimp List with ID %s Not Found Inside MailChimp Account... Exception: %s",
             $list_model->getMailchimpListId(),
-            $exception->getResponse()->getBody()->getContents()
+            $exception->getMessage()
         ));
 
         BatchListExportCronInitializer::fail_cron($cron_id, $export_id);
@@ -147,15 +147,19 @@ foreach($results as $result) {
         catch(\Exception $exception)
         {
             $logger->write(sprintf("Failed Subscribing %s email addresses to MailChimp. Terminating Import...", count($chunk)));
-            BatchListExportCronInitializer::fail_cron($cron_id, $export_id);
+            $logger->write(sprintf("Exception: %s", $exception->getMessage()));
             $import_failed = true;
             $logger->write(sprintf("Import Terminated..."));
+            BatchListExportCronInitializer::fail_cron($cron_id, $export_id);
             break;
         }
     }
 
-    $logger->write(sprintf("Successfully Subscribed %s email addresses to MailChimp...", $successfully_subscribed_number));
-    $logger->write(sprintf("Import Finished..."));
-    BatchListExportCronInitializer::succeed_cron($cron_id, $export_id);
+    if(!$import_failed)
+    {
+        $logger->write(sprintf("Successfully Subscribed %s email addresses to MailChimp...", $successfully_subscribed_number));
+        $logger->write(sprintf("Import Finished..."));
+        BatchListExportCronInitializer::succeed_cron($cron_id, $export_id);
+    }
 
 }

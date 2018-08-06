@@ -1,0 +1,39 @@
+User:  - August 4, 2018, 12:28 am
+Attempt: Initializing Cron with id 14...
+-------------------------
+User:  - August 4, 2018, 12:28 am
+Attempt: Loading Spreadsheet...
+-------------------------
+User:  - August 4, 2018, 12:28 am
+Attempt: Converting Spreadsheet Into an Array...
+-------------------------
+User:  - August 4, 2018, 12:28 am
+Attempt: Reducing Array of Data into 3 Columns...
+-------------------------
+User:  - August 4, 2018, 12:28 am
+Attempt: Transforming Data for Loading Into Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:29 am
+Attempt: Updating Contact Records In Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:29 am
+Attempt: Updating Field: full_name With Value:  Abdallahi Ely Telmoudy  For Post: 25983
+-------------------------
+User:  - August 4, 2018, 12:29 am
+Attempt: Updating Field: full_name With Value:  Abdel fattah Abdel kariem  For Post: 25984
+-------------------------
+User:  - August 4, 2018, 12:29 am
+Attempt: Inserting 0 Contact Records Into Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:29 am
+Attempt: Finished Updating 2 Contact Records in Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:29 am
+Attempt: Total Duplicate Contacts Found: 4084...
+-------------------------
+User:  - August 4, 2018, 12:29 am
+Attempt: Finished Inserting 0 Contact Records into Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:29 am
+Attempt: Finished Cron 14.
+-------------------------

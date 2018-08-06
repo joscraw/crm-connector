@@ -1,0 +1,36 @@
+User:  - August 3, 2018, 11:29 pm
+Attempt: Initializing Cron with id 14...
+-------------------------
+User:  - August 3, 2018, 11:29 pm
+Attempt: Loading Spreadsheet...
+-------------------------
+User:  - August 3, 2018, 11:30 pm
+Attempt: Converting Spreadsheet Into an Array...
+-------------------------
+User:  - August 3, 2018, 11:30 pm
+Attempt: Reducing Array of Data into 3 Columns...
+-------------------------
+User:  - August 3, 2018, 11:30 pm
+Attempt: Transforming Data for Loading Into Database Table wp_posts...
+-------------------------
+User:  - August 3, 2018, 11:30 pm
+Attempt: Updating Pre-existing Contact Records In Database Table wp_posts...
+-------------------------
+User:  - August 3, 2018, 11:31 pm
+Attempt: Updating Contact ao2836@email.vccs.edu For Post: 25980
+-------------------------
+User:  - August 3, 2018, 11:33 pm
+Attempt: Error Updating Field: full_name With Value:  ASAKO OKAMOTO  For Post: 25980
+-------------------------
+User:  - August 3, 2018, 11:33 pm
+Attempt: Error Updating Field: account_name With Value: 253 For Post: 25980
+-------------------------
+User:  - August 3, 2018, 11:33 pm
+Attempt: Error Updating Field: email With Value: ao2836@email.vccs.edu For Post: 25980
+-------------------------
+User:  - August 3, 2018, 11:33 pm
+Attempt: Error Updating Field: contact_type With Value: Prospect For Post: 25980
+-------------------------
+User:  - August 3, 2018, 11:34 pm
+Attempt: Updating Contact ae2629@email.vccs.edu For Post: 25981
+-------------------------

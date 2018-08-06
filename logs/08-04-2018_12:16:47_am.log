@@ -1,0 +1,33 @@
+User:  - August 4, 2018, 12:16 am
+Attempt: Initializing Cron with id 14...
+-------------------------
+User:  - August 4, 2018, 12:16 am
+Attempt: Loading Spreadsheet...
+-------------------------
+User:  - August 4, 2018, 12:17 am
+Attempt: Converting Spreadsheet Into an Array...
+-------------------------
+User:  - August 4, 2018, 12:17 am
+Attempt: Reducing Array of Data into 3 Columns...
+-------------------------
+User:  - August 4, 2018, 12:17 am
+Attempt: Transforming Data for Loading Into Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:17 am
+Attempt: Updating Contact Records In Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:18 am
+Attempt: Inserting 1 Contact Records Into Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:18 am
+Attempt: Finished Updating 0 Contact Records in Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:18 am
+Attempt: Total Duplicate Contacts Found: 4083...
+-------------------------
+User:  - August 4, 2018, 12:18 am
+Attempt: Finished Inserting 1 Contact Records into Database Table wp_posts...
+-------------------------
+User:  - August 4, 2018, 12:18 am
+Attempt: Finished Cron 14.
+-------------------------

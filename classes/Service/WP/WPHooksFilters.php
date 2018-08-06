@@ -23,6 +23,46 @@ class WPHooksFilters
                 return $translations->translate( 'Export List' );
             }
         }
+
+        if ($post->post_type == 'contacts') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Contact' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Contact' );
+            }
+        }
+
+        if ($post->post_type == 'chapters_invitations') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Chapter Invitation' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Chapter Invitation' );
+            }
+        }
+
+        if ($post->post_type == 'drops') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Drop' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Drop' );
+            }
+        }
+
+        if ($post->post_type == 'chapter_summaries') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Chapter Summary' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Chapter Summary' );
+            }
+        }
         return $translation;
     }
 
@@ -38,18 +78,6 @@ class WPHooksFilters
 
             <?php
         endif;
-    }
-
-    public static function insert_post_data($data, $post)
-    {
-        if(in_array($post['post_type'], ['chapters', 'contacts', 'drops', 'lists','chapters_invitations']))
-        {
-            if($post['acf'])
-                $data['post_title'] = array_shift($post['acf']);
-        }
-
-
-        return $data;
     }
 
     public static function login_enqueue_scripts()

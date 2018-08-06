@@ -1,0 +1,27 @@
+User:  - August 1, 2018, 7:39 pm
+Attempt: Initializing Cron with id 30...
+-------------------------
+User:  - August 1, 2018, 7:39 pm
+Attempt: Initializing Export for 1 Chapter(s)...
+-------------------------
+User:  - August 1, 2018, 7:39 pm
+Attempt: Initializing Export From Chapter with ID 253...
+-------------------------
+User:  - August 1, 2018, 7:39 pm
+Attempt: Querying Database for contacts with specified args: {"post_type":"contacts","posts_per_page":-1,"meta_query":[{"meta_key":"chapter","meta_value":"253"}]}...
+-------------------------
+User:  - August 1, 2018, 7:39 pm
+Attempt: Found Contacts. Total Contacts Found: 7564...
+-------------------------
+User:  - August 1, 2018, 7:39 pm
+Attempt: De-duplicating Contacts...
+-------------------------
+User:  - August 1, 2018, 7:39 pm
+Attempt: Contact Count After De-duplicating: 5231...
+-------------------------
+User:  - August 1, 2018, 7:41 pm
+Attempt: Subscribing 250 email addresses to MailChimp
+-------------------------
+User:  - August 1, 2018, 7:41 pm
+Attempt: Subscribing 250 email addresses to MailChimp
+-------------------------
