@@ -39,6 +39,7 @@ class Frontend
     {
         $this->data['current_user'] = wp_get_current_user();
         $this->data['current_user_id'] = get_current_user_id();
+        $this->data['current_user_roles'] = $this->data['current_user'] !== 0 ? (array) $this->data['current_user']->roles : [];
     }
 
     public function remove_from_admin_bar($wp_admin_bar) {
