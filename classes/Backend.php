@@ -67,7 +67,7 @@ class Backend
 
         add_action( 'admin_init', '\CRMConnector\Service\WP\WPHooksFilters::mailchimp_settings_page');
 
-        add_action('admin_init', array($this, 'hide_menu_items_per_role'));
+        add_action('admin_menu', array($this, 'remove_sidebar_admin_menu_items'));
 
         add_action('admin_footer', array($this, 'crmc_add_modals'));
 
@@ -93,16 +93,24 @@ class Backend
 
     }
 
-    public function hide_menu_items_per_role()
+    public function remove_sidebar_admin_menu_items()
     {
         $user = wp_get_current_user();
-        if ( !in_array( 'administrator', (array) $user->roles ) ) {
+        if ( !in_array( 'administrator', (array) $user->roles ))
+        {
 
             remove_menu_page('bulk-delete-posts');
             remove_menu_page('export_personal_data');
             remove_menu_page('options-general.php');
             remove_menu_page('tools.php');
             remove_menu_page('edit.php?post_type=acf-field-group');
+        }
+
+        if(in_array('chapter_officer', (array) $user->roles))
+        {
+            remove_menu_page('edit-comments.php');
+            remove_menu_page('edit.php');
+            remove_menu_page('index.php');
         }
     }
 

@@ -56,7 +56,6 @@ class CRMConnector
      */
     public function initialize()
     {
-
         if (is_admin()) {
             global $crmConnectorBackend;
 
@@ -80,24 +79,22 @@ register_activation_hook( __FILE__, array($CRMConnectorPlugin, 'activate'));
 add_action('init', array($CRMConnectorPlugin, 'initialize'));
 
 
-/*add_action( 'template_redirect', 'redirect_non_logged_users_to_specific_page' );
 
-function redirect_non_logged_users_to_specific_page()
-{
+// fetch the user  testuser6
+/*$wp_user_object = new WP_User(12);*/
+// create a role
+add_role( 'test_role', 'test role', [] );
+// add the role to the user
+/*$wp_user_object->set_role('test_role');*/
 
-    $username = "joshcrawmer4";
-    $user = get_user_by('login', $username );
 
-// Redirect URL //
-    if ( !is_wp_error( $user ) )
-    {
-        wp_clear_auth_cookie();
-        wp_set_current_user ( $user->ID );
-        wp_set_auth_cookie  ( $user->ID );
+// Remove items from the admin bar
+/*function remove_from_admin_bar($wp_admin_bar) {
+        $wp_admin_bar->remove_node('updates');
+        $wp_admin_bar->remove_node('comments');
+        $wp_admin_bar->remove_node('new-content');
+        $wp_admin_bar->remove_node('wp-logo');
+}
+add_action('admin_bar_menu', 'remove_from_admin_bar', 999)*/;
 
-        $redirect_to = user_admin_url();
-        wp_safe_redirect( $redirect_to );
-        exit();
-    }
 
-}*/
