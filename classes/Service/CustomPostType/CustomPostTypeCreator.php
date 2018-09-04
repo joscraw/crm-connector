@@ -19,8 +19,8 @@ class CustomPostTypeCreator
         self::create_import_posttype();
         self::create_export_posttype();
         self::create_chapter_summary_posttype();
-
         self::create_project_posttype();
+        self::create_scholarships_posttype();
     }
 
     private function create_project_posttype() {
@@ -496,5 +496,60 @@ class CustomPostTypeCreator
 
         // Registering your Custom Post Type
         register_post_type( 'chapter_summaries', $args );
+    }
+
+    private static function create_scholarships_posttype() {
+
+        // Set UI labels for Custom Post Type
+        $labels = array(
+            'name'                => 'Scholarships',
+            'singular_name'       => 'Scholarship',
+            'menu_name'           => 'Scholarships',
+            'parent_item_colon'   => 'Parent Scholarships',
+            'all_items'           => 'All Scholarships',
+            'view_item'           => 'View Scholarships',
+            'add_new_item'        => 'Add New Scholarship',
+            'add_new'             => 'Add New',
+            'edit_item'           => 'Edit Scholarship',
+            'update_item'         => 'Update Scholarship',
+            'search_items'        => 'Search Scholarships',
+            'not_found'           => 'Not Found',
+            'not_found_in_trash'  => 'Not found in Trash',
+        );
+
+        // Set other options for Custom Post Type
+
+        $args = array(
+            'label'               => 'scholarships',
+            'description'         => 'Scholarships',
+            'labels'              => $labels,
+            // Features this CPT supports in Post Editor
+            'supports'            => array( 'title', 'custom-fields' ),
+            // You can associate this CPT with a taxonomy or custom taxonomy.
+            'taxonomies'          => array(),
+            /* A hierarchical CPT is like Pages and can have
+            * Parent and child items. A non-hierarchical CPT
+            * is like Posts.
+            */
+            'hierarchical'        => false,
+            'public'              => true,
+            'show_ui'             => true,
+            'show_in_menu'        => true,
+            'show_in_nav_menus'   => true,
+            'show_in_admin_bar'   => true,
+            'menu_position'       => 5,
+            'can_export'          => true,
+            'has_archive'         => true,
+            'exclude_from_search' => false,
+            'publicly_queryable'  => true,
+            'capability_type'     => array('cap_scholarship','cap_scholarships'),
+            'map_meta_cap'        => true,
+            /*'capabilities' => array(
+                'create_posts' => 'do_not_allow', // false < WP 4.5, credit @Ewout
+            ),*/
+        );
+
+        // Registering your Custom Post Type
+        register_post_type( 'scholarships', $args );
     }
 }
