@@ -117,6 +117,12 @@ class EventSearch
             return false;
         }
 
+        if (in_array( 'administrator', $current_user_roles ) ||
+            in_array( 'honor_society_admin', $current_user_roles ))
+        {
+            return true;
+        }
+
         // GET THE EVENTS FOR A STUDENT IF THE USER HAS THAT ROLE
         if (in_array( 'student', $current_user_roles ) ||
             in_array( 'chapter_adviser', $current_user_roles ) ||
