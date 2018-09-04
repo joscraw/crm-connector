@@ -14,8 +14,13 @@ class ScholarshipSearch
     {
             $args = [
                 'post_type' => 'scholarships',
-                'posts_per_page' => -1,
+                'posts_per_page' => 1,
+                'paged' => get_query_var( 'paged' ) ?: 1
             ];
+
+            if ( $s = get_query_var('search', '')  ) {
+                $args['s'] = $s;
+            }
 
             $query = new WP_Query($args);
 
