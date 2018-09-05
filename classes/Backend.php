@@ -52,6 +52,7 @@ class Backend
     {
         $this->crmc_set_initial_data();
         CustomPostTypeCreator::create();
+        $this->add_acf_options_pages();
 
         /**************************************************************
         Backend actions and hoooks
@@ -61,31 +62,29 @@ class Backend
 
         add_action('admin_init', array($this, 'add_admin_ajax_handlers'));
 
-        add_action( 'admin_init', '\CRMConnector\Service\WP\WPHooksFilters::mailchimp_settings_page');
-
         add_action('admin_menu', array($this, 'remove_sidebar_admin_menu_items'));
 
         add_action('admin_footer', array($this, 'crmc_add_modals'));
 
-        add_action('acf/input/admin_head', '\CRMConnector\Service\ACF\ACFHooksFilters::admin_head');
+        add_action('acf/input/admin_head', array($this, 'collapse_acf_panels'));
 
-        add_action('admin_head','\CRMConnector\Service\WP\WPHooksFilters::admin_head');
+        add_action('admin_head', array($this, 'add_import_contacts_button_to_chapters_page'));
 
-        add_filter('gettext', '\CRMConnector\Service\WP\WPHooksFilters::gettext', 10, 4);
+        add_filter('gettext', array($this, 'modify_post_button_text'), 10, 4);
 
-        add_filter('manage_imports_posts_columns', '\CRMConnector\Service\WP\WPHooksFilters::manage_imports_posts_columns');
+        add_filter('manage_imports_posts_columns', array($this, 'add_columns_to_all_imports_view'));
 
-        add_filter('manage_imports_posts_custom_column', '\CRMConnector\Service\WP\WPHooksFilters::manage_imports_posts_custom_column', 10, 2);
+        add_filter('manage_imports_posts_custom_column', array($this, 'modify_column_values_on_all_imports_view'), 10, 2);
 
-        add_filter('manage_exports_posts_columns', '\CRMConnector\Service\WP\WPHooksFilters::manage_exports_posts_columns');
+        add_filter('manage_exports_posts_columns', array($this, 'add_columns_to_all_exports_view'));
 
-        add_filter('manage_exports_posts_custom_column', '\CRMConnector\Service\WP\WPHooksFilters::manage_exports_posts_custom_column', 10, 2);
+        add_filter('manage_exports_posts_custom_column', array($this, 'modify_column_values_on_all_exports_view'), 10, 2);
 
-        add_filter('post_updated_messages', '\CRMConnector\Service\WP\WPHooksFilters::update_messages', 10, 1 );
+        add_filter('post_updated_messages', array($this, 'update_post_messages'), 10, 1 );
 
         add_filter('publish_lists', array($this, 'initialize_batch_list_export'), 10, 2);
 
-        add_action( 'admin_notices', '\CRMConnector\Service\WP\WPHooksFilters::admin_notices');
+        add_action('admin_notices', array($this, 'admin_notices'));
 
         add_filter('acf/load_field/name=chapter_chapter_officer_select', array($this, 'acf_load_chapter_officer_field_choices_for_given_chapter'));
 
@@ -93,6 +92,277 @@ class Backend
 
         add_filter('acf/load_field/name=custom_list_export_query_field_name', array($this, 'acf_load_contact_post_type_field_names'));
 
+    }
+
+    public function add_acf_options_pages()
+    {
+        if( function_exists('acf_add_options_page') ) {
+            $option_page = acf_add_options_page(array(
+                'page_title' 	=> 'MailChimp Settings',
+                'menu_title' 	=> 'MailChimp Settings',
+                'menu_slug' 	=> 'mailchimp-settings',
+                'capability' 	=> 'edit_posts',
+                'redirect' 	=> false
+            ));
+        }
+    }
+
+    public function admin_notices()
+    {
+        $screen = get_current_screen();
+        $errors = get_transient('errors');
+        $notice = get_transient('notice');
+
+        if('lists' == $screen->post_type && in_array($screen->base, ['edit', 'post'])){
+
+            if (!empty($errors)){?>
+                <div class="error">
+                    <p><?php echo implode(",", $errors); ?></p>
+                </div>
+                <?php
+            }
+
+            if($notice)
+            {
+                ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php echo $notice; ?></p>
+                </div>
+                <?php
+            }
+
+        }
+
+        delete_transient('notice');
+        delete_transient('errors');
+    }
+
+    public static function update_post_messages($msg)
+    {
+        $msg[ 'lists' ] = array (
+            0 => '', // Unused. Messages start at index 1.
+            1 => "List Successfully Updated",
+            // or simply "Actor updated.",
+            // natural language "The actor's profile has been updated successfully.",
+            // or what you need "Actor updated, so remember to check also <strong>the films list</strong>."
+
+
+            2 => 'Custom field updated.',  // Probably better do not touch
+            3 => 'Custom field deleted.',  // Probably better do not touch
+
+            4 => "List Successfully Updated",
+            5 => "List restored to revision",
+            6 => "List's Successfully Created",
+            // you can use the kind of messages that better fits with your needs
+            // 6 => "Good boy, one more... so, 4,999,999 are to reach IMDB.",
+            // 6 => "This actor is already on the website.",
+            // 6 => "Congratulations, a new Actor's profile has been published.",
+
+            7 => "List Successfully Created",
+            8 => "List Successfully Created",
+            9 => "List Successfully Created",
+            10 => "List Successfully Created",
+        );
+        return $msg;
+    }
+
+    public function add_columns_to_all_exports_view($columns)
+    {
+        if(is_array($columns))
+        {
+            unset($columns['date']);
+            unset($columns['title']);
+
+            if(!isset( $columns['date_started'] ))
+                $columns['date_started'] = __( 'Date Started' );
+
+            if(!isset( $columns['date_completed'] ))
+                $columns['date_completed'] = __( 'Date Completed' );
+
+            if(!isset( $columns['log_file'] ))
+                $columns['log_file'] = __( 'Log File' );
+
+            if(!isset( $columns['status'] ))
+                $columns['status'] = __( 'Status' );
+        }
+
+        return $columns;
+    }
+
+    public function modify_column_values_on_all_exports_view($column_name, $post_id)
+    {
+        $data = get_post_custom($post_id);
+
+        if ( $column_name == 'date_started')
+            printf( '%s', isset($data['date_started']) ? $data['date_started'][0] : '');
+
+        if ( $column_name == 'date_completed')
+            printf( '%s', isset($data['date_completed']) ? $data['date_completed'][0] : '');
+
+        if ( $column_name == 'log_file')
+            printf( '<a target="_blank"  href="%s">Log File</a>', isset($data['log_file']) ? CRMCFunctions::plugin_url() . '/logs/' . $data['log_file'][0] : '');
+
+        if ( $column_name == 'status')
+            printf( '%s', isset($data['status']) ? $data['status'][0] : '');
+    }
+
+
+
+    public function modify_column_values_on_all_imports_view($column_name, $post_id)
+    {
+        $data = get_post_custom($post_id);
+
+        if ( $column_name == 'date_started')
+            printf( '%s', isset($data['date_started']) ? $data['date_started'][0] : '');
+
+        if ( $column_name == 'date_completed')
+            printf( '%s', isset($data['date_completed']) ? $data['date_completed'][0] : '');
+
+        if ( $column_name == 'log_file')
+            printf( '<a target="_blank" href="%s">Log File</a>', isset($data['log_file']) ? CRMCFunctions::plugin_url() . '/logs/' . $data['log_file'][0] : '');
+
+        if ( $column_name == 'status')
+            printf( '%s', isset($data['status']) ? $data['status'][0] : '');
+    }
+
+    public function add_columns_to_all_imports_view($columns)
+    {
+        if(is_array($columns))
+        {
+            unset($columns['date']);
+            unset($columns['title']);
+
+            if(!isset( $columns['date_started'] ))
+                $columns['date_started'] = __( 'Date Started' );
+
+            if(!isset( $columns['date_completed'] ))
+                $columns['date_completed'] = __( 'Date Completed' );
+
+            if(!isset( $columns['log_file'] ))
+                $columns['log_file'] = __( 'Log File' );
+
+            if(!isset( $columns['status'] ))
+                $columns['status'] = __( 'Status' );
+        }
+
+        return $columns;
+    }
+
+    public function modify_post_button_text($translation, $text, $domain)
+    {
+        global $post;
+        if ($post->post_type == 'lists') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Export List' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Export List' );
+            }
+        }
+
+        if ($post->post_type == 'contacts') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Contact' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Contact' );
+            }
+        }
+
+        if ($post->post_type == 'chapters') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Chapter' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Chapter' );
+            }
+        }
+
+        if ($post->post_type == 'scholarships') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Scholarship' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Scholarship' );
+            }
+        }
+
+        if ($post->post_type == 'tribe_events') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Event' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Event' );
+            }
+        }
+
+        if ($post->post_type == 'chapters_invitations') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Chapter Invitation' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Chapter Invitation' );
+            }
+        }
+
+        if ($post->post_type == 'drops') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Drop' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Drop' );
+            }
+        }
+
+        if ($post->post_type == 'chapter_summaries') {
+            $translations = &get_translations_for_domain( $domain);
+            if ( $text == 'Update') {
+                return $translations->translate( 'Edit Chapter Summary' );
+            }
+            if ( $text == 'Publish') {
+                return $translations->translate( 'Create Chapter Summary' );
+            }
+        }
+        return $translation;
+    }
+
+    public function add_import_contacts_button_to_chapters_page()
+    {
+        if(isset($_GET['action']) && $_GET['action'] === 'edit'):
+            ?>
+            <script>
+                jQuery(function(){
+                    jQuery("body.post-type-chapters .wrap h1").append('<a href="javascript:void(0)" class="page-title-action js-show-import-modal-button">Import Contacts</a>');
+                });
+            </script>
+
+            <?php
+        endif;
+    }
+
+    public function collapse_acf_panels()
+    {
+        ?>
+        <script type="text/javascript">
+            (function($){
+
+                $(document).ready(function(){
+
+                    $('.layout').addClass('-collapsed');
+                    $('.acf-postbox').addClass('closed');
+
+                });
+
+            })(jQuery);
+        </script>
+        <?php
     }
 
     public function remove_sidebar_admin_menu_items()
