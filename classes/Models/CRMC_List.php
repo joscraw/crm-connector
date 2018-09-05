@@ -1,11 +1,11 @@
 <?php
 
-namespace CRMConnector\Entity;
+namespace CRMConnector\Models;
 
 /**
- * Class ListPostType
+ * Class CRMC_List
  */
-class ListPostType
+class CRMC_List
 {
 
     /**

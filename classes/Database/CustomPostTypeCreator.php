@@ -1,6 +1,6 @@
 <?php
 
-namespace CRMConnector\Service\CustomPostType;
+namespace CRMConnector\Database;
 
 
 /**

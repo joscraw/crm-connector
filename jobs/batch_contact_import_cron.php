@@ -2,7 +2,7 @@
 
 /** Loads the WordPress Environment and Template */
 use CRMConnector\Crons\Initializers\BatchContactImportCronInitializer;
-use CRMConnector\Service\CustomPostType\Contact\ContactTransformer;
+use CRMConnector\ContactTransformer;
 use CRMConnector\Utils\Logger;
 
 require( dirname( __FILE__ ) . '/../../../../wp-load.php' );

@@ -12,7 +12,7 @@ License: GPLv2 or later
 use CRMConnector\Backend;
 use CRMConnector\Concerns\CrmConnectorAdminBar;
 use CRMConnector\Frontend;
-use CRMConnector\Importer\CRMCDatabaseTables;
+use CRMConnector\Database\DatabaseTableCreator;
 use CRMConnector\Support\DatabaseTables;
 use CRMConnector\Utils\CRMCFunctions;
 
@@ -65,7 +65,7 @@ class CRMConnector
         global $crmConnectorFrontend;
         $crmConnectorFrontend = new Frontend();
 
-        CRMCDatabaseTables::verify();
+        DatabaseTableCreator::create();
 
         $this->registerAdminBarMenu();
 

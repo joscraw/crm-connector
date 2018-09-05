@@ -1,6 +1,6 @@
 <?php
 
-namespace CRMConnector\Scholarships;
+namespace CRMConnector\Database;
 
 use WP_Query;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace CRMConnector\Events;
+namespace CRMConnector\Database;
 
 use TribeEvents;
 use WP_Query;

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace CRMConnector\Service\CustomPostType\Contact;
+namespace CRMConnector;
 
 /**
  * Class ContactTransformer

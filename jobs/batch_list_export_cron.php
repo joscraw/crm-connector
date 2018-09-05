@@ -6,8 +6,7 @@ use CRMConnector\Api\Models\MailChimp\Creds;
 use CRMConnector\Api\Models\MailChimp\EmailCollection;
 use CRMConnector\Crons\Initializers\BatchContactImportCronInitializer;
 use CRMConnector\Crons\Initializers\BatchListExportCronInitializer;
-use CRMConnector\Entity\ListPostType;
-use CRMConnector\Service\CustomPostType\Contact\ContactTransformer;
+use CRMConnector\Models\CRMC_List;
 use CRMConnector\Utils\Logger;
 
 require( dirname( __FILE__ ) . '/../../../../wp-load.php' );
@@ -41,7 +40,7 @@ foreach($results as $result) {
 
     $list = get_post_meta($list_id);
 
-    $list_model = new ListPostType();
+    $list_model = new CRMC_List();
     $list_model->from_array($list);
 
 
@@ -135,7 +134,7 @@ foreach($results as $result) {
     $successfully_subscribed_number = 0;
     foreach($chunks as $chunk)
     {
-        // trying to not overwhelm the mailchimp api 
+        // trying to not overwhelm the mailchimp api
         sleep(10);
 
         try

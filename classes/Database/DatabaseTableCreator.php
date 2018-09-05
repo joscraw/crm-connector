@@ -1,22 +1,21 @@
 <?php
 
-namespace CRMConnector\Importer;
+namespace CRMConnector\Database;
 
 use CRMConnector\Support\DatabaseTables;
 use CRMConnector\Utils\CRMCFunctions;
 
 /**
- * Class CRMCDatabaseTables
+ * Class DatabaseTableCreator
  * @package CRMConnector\Concerns
  */
-class CRMCDatabaseTables
+class DatabaseTableCreator
 {
     /**
      * Create database tables only if they don't exist
      */
-    public static function verify()
+    public static function create()
     {
-
         global $wpdb;
 
         $batch_list_export_crons_table = $wpdb->prefix.'batch_list_export_crons';
