@@ -14,7 +14,7 @@ class ScholarshipSearch
     {
             $args = [
                 'post_type' => 'scholarships',
-                'posts_per_page' => 1,
+                'posts_per_page' => 10,
                 'paged' => get_query_var( 'paged' ) ?: 1
             ];
 
