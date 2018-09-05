@@ -67,9 +67,10 @@ class BatchListExportCronModel
 
     private function validate_mailchimp_creds()
     {
-        $settings = get_option( 'crmc_settings' );
+        $username = get_field('username', 'option');
+        $api_key = get_field('api_key', 'option');
 
-        if(!isset($settings['mailchimp_username']) || !isset($settings['mailchimp_api_key']) || $settings['mailchimp_username'] === '' || $settings['mailchimp_api_key'] === '')
+        if(empty($username) || empty($api_key))
         {
             $this->errors[] = 'Your MailChimp Username and API Key Must Be Set Before This List Gets Synced To MailChimp! Add Those and Then Come Back and Re-Export This List!';
         }

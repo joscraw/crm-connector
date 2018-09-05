@@ -1,0 +1,42 @@
+User:  - September 5, 2018, 6:04 am
+Attempt: Initializing Cron with id 33...
+-------------------------
+User:  - September 5, 2018, 6:04 am
+Attempt: Initializing Export for 1 Chapter(s)...
+-------------------------
+User:  - September 5, 2018, 6:04 am
+Attempt: Initializing Export From Chapter with ID 30225...
+-------------------------
+User:  - September 5, 2018, 6:04 am
+Attempt: Querying Database for contacts with specified args: {"post_type":"contacts","posts_per_page":-1,"meta_query":[{"key":"account_name","value":"30225"}]}...
+-------------------------
+User:  - September 5, 2018, 6:05 am
+Attempt: Found Contacts. Total Contacts Found: 1161...
+-------------------------
+User:  - September 5, 2018, 6:05 am
+Attempt: De-duplicating Contacts...
+-------------------------
+User:  - September 5, 2018, 6:05 am
+Attempt: Contact Count After De-duplicating: 1161...
+-------------------------
+User:  - September 5, 2018, 6:05 am
+Attempt: Subscribing 250 email addresses to MailChimp
+-------------------------
+User:  - September 5, 2018, 6:05 am
+Attempt: Subscribing 250 email addresses to MailChimp
+-------------------------
+User:  - September 5, 2018, 6:06 am
+Attempt: Subscribing 250 email addresses to MailChimp
+-------------------------
+User:  - September 5, 2018, 6:06 am
+Attempt: Subscribing 250 email addresses to MailChimp
+-------------------------
+User:  - September 5, 2018, 6:06 am
+Attempt: Subscribing 161 email addresses to MailChimp
+-------------------------
+User:  - September 5, 2018, 6:06 am
+Attempt: Successfully Subscribed 1161 email addresses to MailChimp...
+-------------------------
+User:  - September 5, 2018, 6:06 am
+Attempt: Import Finished...
+-------------------------

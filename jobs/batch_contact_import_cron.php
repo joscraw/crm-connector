@@ -17,21 +17,6 @@ $results = $wpdb->get_results(sprintf("SELECT id, import_id, database_column_nam
     'IN_QUEUE'
 ));
 
-if(update_field('full_name', 'Josh K',25980))
-{
-    $n = "Josh";
-}
-
-if(update_field('full_name', 'hello ',25983))
-{
-    $n = "Josh";
-}
-
-if(update_field('full_name', 'world',25984))
-{
-    $n = "Josh";
-}
-
 
 foreach($results as $result) {
     // Let's set the default import failed status to false.

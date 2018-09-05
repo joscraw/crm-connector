@@ -30,8 +30,8 @@ foreach($results as $result) {
     $logger = new Logger();
     $email_collection = new EmailCollection();
     $creds = new Creds;
-    $creds->username = get_option('crmc_settings')['mailchimp_username'];
-    $creds->api_key = get_option('crmc_settings')['mailchimp_api_key'];
+    $creds->username = get_field('username', 'option');
+    $creds->api_key = get_field('api_key', 'option');
     $mailchimp_api = MailChimp::Instance();
 
     $logger->write(sprintf("Initializing Cron with id %s...", $cron_id));
@@ -74,8 +74,8 @@ foreach($results as $result) {
                 'posts_per_page' => -1 ,
                 'meta_query' => [
                     [
-                        'meta_key' => 'chapter',
-                        'meta_value' => $chapter
+                        'key' => 'account_name',
+                        'value' => $chapter
                     ]
                 ]
             ];
@@ -135,6 +135,9 @@ foreach($results as $result) {
     $successfully_subscribed_number = 0;
     foreach($chunks as $chunk)
     {
+        // trying to not overwhelm the mailchimp api 
+        sleep(10);
+
         try
         {
             $logger->write(sprintf("Subscribing %s email addresses to MailChimp", count($chunk)));
