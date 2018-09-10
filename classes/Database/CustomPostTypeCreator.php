@@ -19,25 +19,25 @@ class CustomPostTypeCreator
         self::create_import_posttype();
         self::create_export_posttype();
         self::create_chapter_summary_posttype();
-        self::create_project_posttype();
+        self::create_partners_posttype();
         self::create_scholarships_posttype();
     }
 
-    private function create_project_posttype() {
+    private function create_partners_posttype() {
 
         // Set UI labels for Custom Post Type
         $labels = array(
-            'name'                => 'Projects',
-            'singular_name'       => 'Project',
-            'menu_name'           => 'Projects',
-            'parent_item_colon'   => 'Parent Project',
-            'all_items'           => 'All Projects',
-            'view_item'           => 'View Project',
-            'add_new_item'        => 'Add New Project',
+            'name'                => 'Partners',
+            'singular_name'       => 'Partner',
+            'menu_name'           => 'Partners',
+            'parent_item_colon'   => 'Parent Partner',
+            'all_items'           => 'All Partners',
+            'view_item'           => 'View Partner',
+            'add_new_item'        => 'Add New Partner',
             'add_new'             => 'Add New',
-            'edit_item'           => 'Edit Project',
-            'update_item'         => 'Update Project',
-            'search_items'        => 'Search Projects',
+            'edit_item'           => 'Edit Partner',
+            'update_item'         => 'Update Partner',
+            'search_items'        => 'Search Partners',
             'not_found'           => 'Not Found',
             'not_found_in_trash'  => 'Not found in Trash',
         );
@@ -45,13 +45,13 @@ class CustomPostTypeCreator
         // Set other options for Custom Post Type
 
         $args = array(
-            'label'               => 'projects',
-            'description'         => 'Imported Projects',
+            'label'               => 'Partners',
+            'description'         => 'Partners',
             'labels'              => $labels,
             // Features this CPT supports in Post Editor
             'supports'            => array( 'title', 'custom-fields' ),
             // You can associate this CPT with a taxonomy or custom taxonomy.
-            'taxonomies'          => array( 'projects' ),
+            'taxonomies'          => array(),
             /* A hierarchical CPT is like Pages and can have
             * Parent and child items. A non-hierarchical CPT
             * is like Posts.
@@ -67,12 +67,12 @@ class CustomPostTypeCreator
             'has_archive'         => true,
             'exclude_from_search' => false,
             'publicly_queryable'  => true,
-            'capability_type'     => array('cap_project','cap_projects'),
+            'capability_type'     => array('cap_partner','cap_partners'),
             'map_meta_cap'        => true,
         );
 
         // Registering your Custom Post Type
-        register_post_type( 'projects', $args );
+        register_post_type( 'partners', $args );
 
     }
 
