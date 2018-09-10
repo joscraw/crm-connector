@@ -21,6 +21,7 @@ class CustomPostTypeCreator
         self::create_chapter_summary_posttype();
         self::create_partners_posttype();
         self::create_scholarships_posttype();
+        self::create_potential_duplicates_posttype();
     }
 
     private function create_partners_posttype() {
@@ -551,5 +552,57 @@ class CustomPostTypeCreator
 
         // Registering your Custom Post Type
         register_post_type( 'scholarships', $args );
+    }
+
+    private static function create_potential_duplicates_posttype()
+    {
+        // Set UI labels for Custom Post Type
+        $labels = array(
+            'name'                => 'Potential Duplicates',
+            'singular_name'       => 'Potential Duplicate',
+            'menu_name'           => 'Potential Duplicates',
+            'parent_item_colon'   => 'Parent Potential Duplicates',
+            'all_items'           => 'All Potential Duplicates',
+            'view_item'           => 'View Potential Duplicates',
+            'add_new_item'        => 'Add New Potential Duplicate',
+            'add_new'             => 'Add New',
+            'edit_item'           => 'Edit Potential Duplicate',
+            'update_item'         => 'Update Potential Duplicate',
+            'search_items'        => 'Search Potential Duplicates',
+            'not_found'           => 'Not Found',
+            'not_found_in_trash'  => 'Not found in Trash',
+        );
+
+        // Set other options for Custom Post Type
+
+        $args = array(
+            'label'               => 'potential_duplicates',
+            'description'         => 'Potential Duplicates',
+            'labels'              => $labels,
+            // Features this CPT supports in Post Editor
+            'supports'            => array( 'title', 'custom-fields' ),
+            // You can associate this CPT with a taxonomy or custom taxonomy.
+            'taxonomies'          => array(),
+            /* A hierarchical CPT is like Pages and can have
+            * Parent and child items. A non-hierarchical CPT
+            * is like Posts.
+            */
+            'hierarchical'        => false,
+            'public'              => true,
+            'show_ui'             => true,
+            'show_in_menu'        => true,
+            'show_in_nav_menus'   => true,
+            'show_in_admin_bar'   => true,
+            'menu_position'       => 5,
+            'can_export'          => true,
+            'has_archive'         => true,
+            'exclude_from_search' => false,
+            'publicly_queryable'  => true,
+            'capability_type'     => array('cap_potential_duplicate','cap_potential_duplicates'),
+            'map_meta_cap'        => true,
+        );
+
+        // Registering your Custom Post Type
+        register_post_type( 'potential_duplicates', $args );
     }
 }

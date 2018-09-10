@@ -114,7 +114,30 @@ foreach($results as $result) {
                 $logger->write(sprintf("Error Inserting Field: %s With Value: %s For Post: %s", $field, $value, $post_id));
             }
         }
+    }
 
+    foreach($potential_duplicates as $contact)
+    {
+        // Insert the default data that Wordpress requires for a post
+        $result = wp_insert_post([
+            "post_title"    =>  $contact->full_name,
+            "post_type"     =>  'potential_duplicates',
+            "post_status"   =>  'publish',
+        ], true);
+
+        if($result instanceof WP_Error)
+        {
+            $error_messages = implode(',', $result->get_error_messages());
+            $logger->write(sprintf("Error Creating Potential Duplicate %s. WP Error Messages: %s", $contact->full_name, $error_messages));
+            continue;
+        }
+
+        $post_id = $result;
+
+        foreach($contact as $field => $value)
+        {
+            update_field($field, $value, $post_id);
+        }
     }
 
     $logger->write(sprintf("Finished Cron %s.", $cron_id));

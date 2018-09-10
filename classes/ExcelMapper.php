@@ -43,7 +43,6 @@ class ExcelMapper implements \Iterator
             $this->columns[] = $cell->getValue();
         }
 
-        $this->next();
         $cellIterator = $this->rowIterator->current()->getCellIterator();
 
         foreach($cellIterator as $index => $cell)

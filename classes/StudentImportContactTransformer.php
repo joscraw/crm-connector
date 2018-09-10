@@ -17,14 +17,23 @@ trait StudentImportContactTransformer
     public function transform_record(array $record)
     {
         return [
-            'full_name'     =>  trim($this->format_name($record)), // This should always have a value since a contact name is required
-            'email'         =>  isset($record['Personal Email']) ? trim($record['Personal Email']) : '',
-            'school_email'         =>  isset($record['School Email']) ? trim($record['School Email']) : '',
-            'contact_type'  =>  'Prospect',
+            'full_name'             =>  trim($this->format_name($record)), // This should always have a value since a contact name is required
+            'email'                 =>  isset($record['Personal Email']) ? trim($record['Personal Email']) : '',
+            'school_email'          =>  isset($record['School Email']) ? trim($record['School Email']) : '',
+            'contact_type'          =>  'Prospect',
+            'permanent_address_1'   => isset($record['Permanent Address 1']) ? trim($record['Permanent Address 1']) : '',
+            'permanent_address_2'   => isset($record['Permanent Address 2']) ? trim($record['Permanent Address 2']) : '',
+            'permanent_address_3'   => isset($record['Permanent Address 3']) ? trim($record['Permanent Address 3']) : '',
+            'permanent_city'        => isset($record['Permanent City']) ? trim($record['Permanent City']) : '',
+            'permanent_state'       => isset($record['Permanent State']) ? trim($record['Permanent State']) : '',
+            'permanent_zip'         => isset($record['Permanent Zip']) ? trim($record['Permanent Zip']) : '',
+            'current_address_1'     => isset($record['Current Address 1']) ? trim($record['Current Address 1']) : '',
+            'current_address_2'     => isset($record['Current Address 2']) ? trim($record['Current Address 2']) : '',
+            'current_address_3'     => isset($record['Current Address 3']) ? trim($record['Current Address 3']) : '',
+            'current_city'          => isset($record['Current City']) ? trim($record['Current City']) : '',
+            'current_state'         => isset($record['Current State']) ? trim($record['Current State']) : '',
+            'current_zip'           => isset($record['Current Zip']) ? trim($record['Current Zip']) : '',
         ];
-
-        //School Name,Contact Type,Chapter Invitation ID,Prospect Load Date,Prefix,Suffix,Current Address 1,Current Address 2,Current Address 3,Current City,Current State,Current Zip,Current Country,Permanent Address 1,Permanent Address 2,Permanent Address 3,Permanent City,Permanent State,Permanent Zip,Permanent Country,Personal Email,School Email,Expected Graduation Date,GPA,Major,Minor,Mobile,Phone,College/University ID,International Student,Nationality,Join Date
-
     }
 
     /**

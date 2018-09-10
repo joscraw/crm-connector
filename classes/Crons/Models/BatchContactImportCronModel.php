@@ -317,6 +317,18 @@ class BatchContactImportCronModel
             return $this;
         }
 
+        if(!in_array('First Name', unserialize($this->getDatabaseColumnNames())))
+        {
+            $this->errors['main'][] = 'You must map in a first name!';
+            return $this;
+        }
+
+        if(!in_array('Last Name', unserialize($this->getDatabaseColumnNames())))
+        {
+            $this->errors['main'][] = 'You must map in a last name!';
+            return $this;
+        }
+
         return $this;
     }
 }
