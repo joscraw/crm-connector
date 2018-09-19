@@ -19,7 +19,7 @@ use CRMConnector\Crons\Initializers\BatchSubscriptionCronInitializer;
 use CRMConnector\Crons\Models\BatchContactImportCronModel;
 use CRMConnector\Crons\Models\BatchListExportCronModel;
 use CRMConnector\Crons\Models\BatchSubscriptionCronModel;
-use CRMConnector\Service\CustomPostType\CustomPostTypeCreator;
+use CRMConnector\Database\CustomPostTypeCreator;
 use finfo;
 use CRMConnector\Utils\CRMCFunctions;
 use CRMConnector\Api\GuzzleFactory;
@@ -450,7 +450,7 @@ class Backend
 
     public function crmc_add_modals()
     {
-       include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/admin/partials/modals/_import_modal.php');
+       include(\CRMConnector\Utils\CRMCFunctions::plugin_dir() . '/views/modals/_import_modal.php');
     }
 
     public function mailchimp_settings_page() {

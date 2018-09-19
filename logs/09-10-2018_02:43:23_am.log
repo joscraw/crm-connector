@@ -1,0 +1,18 @@
+User:  - September 10, 2018, 2:43 am
+Attempt: Initializing Cron with id 17...
+-------------------------
+User:  - September 10, 2018, 2:43 am
+Attempt: Loading Spreadsheet...
+-------------------------
+User:  - September 10, 2018, 2:43 am
+Attempt: Converting Spreadsheet Into an Array...
+-------------------------
+User:  - September 10, 2018, 2:43 am
+Attempt: Reducing Array of Data into 4 Columns...
+-------------------------
+User:  - September 10, 2018, 2:43 am
+Attempt: Inserting 1 Contact Records Into Database Table wp_posts...
+-------------------------
+User:  - September 10, 2018, 2:43 am
+Attempt: Finished Cron 17.
+-------------------------
