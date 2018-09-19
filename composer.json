@@ -1,5 +1,5 @@
 {
-    "name": "CRM Connector PLugin",
+    "name": "crm-connector",
     "description": "Plugin For CRM",
     "type": "wordpress-plugin",
     "license": "proprietary",
