@@ -24,7 +24,7 @@ class CustomPostTypeCreator
         self::create_potential_duplicates_posttype();
     }
 
-    private function create_partners_posttype() {
+    private static function create_partners_posttype() {
 
         // Set UI labels for Custom Post Type
         $labels = array(
@@ -77,7 +77,7 @@ class CustomPostTypeCreator
 
     }
 
-    private function create_contact_posttype() {
+    private static function create_contact_posttype() {
 
         // Set UI labels for Custom Post Type
         $labels = array(
