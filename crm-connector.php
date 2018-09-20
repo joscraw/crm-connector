@@ -16,6 +16,12 @@ use CRMConnector\Database\DatabaseTableCreator;
 use CRMConnector\Support\DatabaseTables;
 use CRMConnector\Utils\CRMCFunctions;
 
+$autoload_path = __DIR__ . '/vendor/autoload.php';
+
+if ( file_exists( $autoload_path ) ) {
+    require_once( $autoload_path );
+}
+
 require_once __DIR__ . '/vendor/autoload.php';
 require_once( plugin_dir_path( __FILE__ ). 'includes/helpers.php' );
 
