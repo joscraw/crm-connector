@@ -22,7 +22,6 @@ if ( file_exists( $autoload_path ) ) {
     require_once( $autoload_path );
 }
 
-require_once __DIR__ . '/vendor/autoload.php';
 require_once( plugin_dir_path( __FILE__ ). 'includes/helpers.php' );
 
 // Make sure we don't expose any info if called directly

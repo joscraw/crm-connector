@@ -34,9 +34,9 @@ die();*/
 ini_set('display_errors',1);
 error_reporting(-1);*/
 
-ini_set("log_errors", 1);
+/*ini_set("log_errors", 1);
 ini_set("error_log", "/tmp/php-error.log");
-ini_set('memory_limit', '256M');
+ini_set('memory_limit', '256M');*/
 
 /**
  * Class Backend
@@ -251,7 +251,7 @@ class Backend
     public function modify_post_button_text($translation, $text, $domain)
     {
         global $post;
-        if ($post->post_type == 'lists') {
+        if ($post && $post->post_type == 'lists') {
             $translations = &get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Export List' );
@@ -261,7 +261,7 @@ class Backend
             }
         }
 
-        if ($post->post_type == 'contacts') {
+        if ($post && $post->post_type == 'contacts') {
             $translations = &get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Contact' );
@@ -271,7 +271,7 @@ class Backend
             }
         }
 
-        if ($post->post_type == 'chapters') {
+        if ($post && $post->post_type == 'chapters') {
             $translations = &get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Chapter' );
@@ -281,7 +281,7 @@ class Backend
             }
         }
 
-        if ($post->post_type == 'scholarships') {
+        if ($post && $post->post_type == 'scholarships') {
             $translations = &get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Scholarship' );
@@ -291,7 +291,7 @@ class Backend
             }
         }
 
-        if ($post->post_type == 'tribe_events') {
+        if ($post && $post->post_type == 'tribe_events') {
             $translations = &get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Event' );
@@ -301,7 +301,7 @@ class Backend
             }
         }
 
-        if ($post->post_type == 'chapters_invitations') {
+        if ($post && $post->post_type == 'chapters_invitations') {
             $translations = &get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Chapter Invitation' );
@@ -311,7 +311,7 @@ class Backend
             }
         }
 
-        if ($post->post_type == 'drops') {
+        if ($post && $post->post_type == 'drops') {
             $translations = &get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Drop' );
@@ -321,7 +321,7 @@ class Backend
             }
         }
 
-        if ($post->post_type == 'chapter_summaries') {
+        if ($post && $post->post_type == 'chapter_summaries') {
             $translations = &get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Chapter Summary' );
