@@ -22,6 +22,7 @@ class CustomPostTypeCreator
         self::create_partners_posttype();
         self::create_scholarships_posttype();
         self::create_potential_duplicates_posttype();
+        self::create_reports_posttype();
     }
 
     private static function create_partners_posttype() {
@@ -601,5 +602,57 @@ class CustomPostTypeCreator
 
         // Registering your Custom Post Type
         register_post_type( 'potential_duplicates', $args );
+    }
+
+    private static function create_reports_posttype()
+    {
+        // Set UI labels for Custom Post Type
+        $labels = array(
+            'name'                => 'Reports',
+            'singular_name'       => 'Report',
+            'menu_name'           => 'Reports',
+            'parent_item_colon'   => 'Parent Reports',
+            'all_items'           => 'All Reports',
+            'view_item'           => 'View Reports',
+            'add_new_item'        => 'Add New Report',
+            'add_new'             => 'Add New',
+            'edit_item'           => 'Edit Report',
+            'update_item'         => 'Update Report',
+            'search_items'        => 'Search Reports',
+            'not_found'           => 'Not Found',
+            'not_found_in_trash'  => 'Not found in Trash',
+        );
+
+        // Set other options for Custom Post Type
+
+        $args = array(
+            'label'               => 'reports',
+            'description'         => 'Reports',
+            'labels'              => $labels,
+            // Features this CPT supports in Post Editor
+            'supports'            => array( 'title', 'custom-fields' ),
+            // You can associate this CPT with a taxonomy or custom taxonomy.
+            'taxonomies'          => array(),
+            /* A hierarchical CPT is like Pages and can have
+            * Parent and child items. A non-hierarchical CPT
+            * is like Posts.
+            */
+            'hierarchical'        => false,
+            'public'              => true,
+            'show_ui'             => true,
+            'show_in_menu'        => true,
+            'show_in_nav_menus'   => true,
+            'show_in_admin_bar'   => true,
+            'menu_position'       => 5,
+            'can_export'          => true,
+            'has_archive'         => true,
+            'exclude_from_search' => false,
+            'publicly_queryable'  => true,
+            'capability_type'     => array('cap_report','cap_reports'),
+            'map_meta_cap'        => true,
+        );
+
+        // Registering your Custom Post Type
+        register_post_type( 'reports', $args );
     }
 }

@@ -1,7 +1,4 @@
 {
-    "config": {
-          "vendor-dir": "vendor"
-        },
     "name": "crm-connector",
     "description": "Plugin For CRM",
     "type": "wordpress-plugin",

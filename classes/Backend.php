@@ -26,17 +26,7 @@ use CRMConnector\Api\GuzzleFactory;
 use CRMConnector\Api\HubSpot;
 use WP_Query;
 
-/*phpinfo();
-
-die();*/
-
-/*ini_set('display_startup_errors',1);
-ini_set('display_errors',1);
-error_reporting(-1);*/
-
-/*ini_set("log_errors", 1);
-ini_set("error_log", "/tmp/php-error.log");
-ini_set('memory_limit', '256M');*/
+ini_set('memory_limit', '256M');
 
 /**
  * Class Backend
@@ -80,6 +70,10 @@ class Backend
 
         add_filter('manage_exports_posts_custom_column', array($this, 'modify_column_values_on_all_exports_view'), 10, 2);
 
+        add_filter('manage_reports_posts_columns', array($this, 'add_columns_to_all_reports_view'));
+
+        add_filter('manage_reports_posts_custom_column', array($this, 'modify_column_values_on_all_reports_view'), 10, 2);
+
         add_filter('post_updated_messages', array($this, 'update_post_messages'), 10, 1 );
 
         add_filter('publish_lists', array($this, 'initialize_batch_list_export'), 10, 2);
@@ -91,6 +85,8 @@ class Backend
         add_filter('acf/load_field/name=event_chapter_select_for_officer', array($this, 'acf_load_chapter_field_choice_contact_is_assigned_to'));
 
         add_filter('acf/load_field/name=custom_list_export_query_field_name', array($this, 'acf_load_contact_post_type_field_names'));
+
+        add_action( 'admin_post_generate_report', array($this, 'generate_report'));
 
     }
 
@@ -252,7 +248,7 @@ class Backend
     {
         global $post;
         if ($post && $post->post_type == 'lists') {
-            $translations = &get_translations_for_domain( $domain);
+            $translations = get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Export List' );
             }
@@ -262,7 +258,7 @@ class Backend
         }
 
         if ($post && $post->post_type == 'contacts') {
-            $translations = &get_translations_for_domain( $domain);
+            $translations = get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Contact' );
             }
@@ -272,7 +268,7 @@ class Backend
         }
 
         if ($post && $post->post_type == 'chapters') {
-            $translations = &get_translations_for_domain( $domain);
+            $translations = get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Chapter' );
             }
@@ -282,7 +278,7 @@ class Backend
         }
 
         if ($post && $post->post_type == 'scholarships') {
-            $translations = &get_translations_for_domain( $domain);
+            $translations = get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Scholarship' );
             }
@@ -292,7 +288,7 @@ class Backend
         }
 
         if ($post && $post->post_type == 'tribe_events') {
-            $translations = &get_translations_for_domain( $domain);
+            $translations = get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Event' );
             }
@@ -302,7 +298,7 @@ class Backend
         }
 
         if ($post && $post->post_type == 'chapters_invitations') {
-            $translations = &get_translations_for_domain( $domain);
+            $translations = get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Chapter Invitation' );
             }
@@ -312,7 +308,7 @@ class Backend
         }
 
         if ($post && $post->post_type == 'drops') {
-            $translations = &get_translations_for_domain( $domain);
+            $translations = get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Drop' );
             }
@@ -322,7 +318,7 @@ class Backend
         }
 
         if ($post && $post->post_type == 'chapter_summaries') {
-            $translations = &get_translations_for_domain( $domain);
+            $translations = get_translations_for_domain( $domain);
             if ( $text == 'Update') {
                 return $translations->translate( 'Edit Chapter Summary' );
             }
@@ -331,6 +327,31 @@ class Backend
             }
         }
         return $translation;
+    }
+
+    public function add_columns_to_all_reports_view($columns)
+    {
+        if(is_array($columns))
+        {
+            unset($columns['date']);
+
+            if(!isset( $columns['generate_report'] ))
+                $columns['generate_report'] = __( 'Generate Report' );
+        }
+
+        return $columns;
+    }
+
+    public function modify_column_values_on_all_reports_view($column_name, $post_id)
+    {
+        $report = get_post_custom($post_id);
+
+        $url = '/wp/wp-admin/admin-post.php?report=' . $post_id . '&action=generate_report&report_type=' . $report['report_type'][0];
+
+        if ( $column_name == 'generate_report')
+        {
+            echo '<a target="_blank" href="'.$url.'">Generate Report</a>';
+        }
     }
 
     public function add_import_contacts_button_to_chapters_page()
@@ -780,6 +801,27 @@ class Backend
 
         // return the field
         return $field;
+    }
+
+    public function generate_report()
+    {
+        if(!isset($_GET['report_type']) || !isset($_GET['report']))
+        {
+            die("report could not be generated. Missing GET params");
+        }
+
+        $report_type = $_GET['report_type'];
+        $report_id = $_GET['report'];
+
+        $factory = ReportGeneratorFactory::getInstance($report_id);
+
+        if(!$generator = $factory->get($report_type))
+        {
+            die("Generator could not be found");
+        }
+
+        $generator->generate();
+
     }
 
 }

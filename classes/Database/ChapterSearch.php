@@ -57,4 +57,48 @@ class ChapterSearch
 
     }
 
+    /**
+     * @return array|bool
+     */
+    public function get_all()
+    {
+        $chapters = get_posts([
+            'post_type' => 'chapters',
+            'posts_per_page' => -1,
+        ]);
+
+        if(!$chapters)
+        {
+            return false;
+        }
+
+        return $chapters;
+
+    }
+
+    /**
+     * This method will get all chapters with the data structured
+     * as a normal mysql query.
+     *
+     * @return array|null|object
+     */
+    public function get_all_chapters_normalized()
+    {
+        global $wpdb;
+
+        $r = $wpdb->get_results(
+            "SELECT p.ID, 
+               p.post_title, 
+               pm1.meta_value as account_name
+              FROM  {$wpdb->posts} p 
+              INNER JOIN {$wpdb->postmeta} AS pm1  ON pm1.post_id = p.ID
+              WHERE
+              pm1.meta_key = 'account_name' AND        
+              p.post_type = 'chapters' AND
+              p.post_status = 'publish'"
+        );
+
+        return $r;
+    }
+
 }
