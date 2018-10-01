@@ -15,6 +15,13 @@ use CRMConnector\Frontend;
 use CRMConnector\Database\DatabaseTableCreator;
 use CRMConnector\Support\DatabaseTables;
 use CRMConnector\Utils\CRMCFunctions;
+use CRMConnector\Workflows\Pub\ChapterLeadershipChanged;
+use CRMConnector\Workflows\Sub\SetChapterLeadershipChapterOperationsName;
+use CRMConnector\Workflows\Sub\SetChapterLeadershipChapterOperationsEmail;
+use CRMConnector\Workflows\Sub\SetChapterLeadershipIsCurrent;
+use CRMConnector\Workflows\Sub\SetChapterLeadershipIsFuture;
+use CRMConnector\Workflows\Sub\SetChapterLeadershipName;
+use CRMConnector\Workflows\Sub\SetChapterLeadershipTitle;
 
 $autoload_path = __DIR__ . '/vendor/autoload.php';
 
@@ -36,6 +43,10 @@ if ( !function_exists( 'add_action' ) ) {
  */
 class CRMConnector
 {
+    /**
+     * @var
+     */
+    public $data;
 
     use CrmConnectorAdminBar;
 
@@ -61,6 +72,8 @@ class CRMConnector
      */
     public function initialize()
     {
+        add_action( 'save_post', array($this, 'after_save_meta'), 100, 3 );
+
         if (is_admin()) {
             global $crmConnectorBackend;
 
@@ -74,9 +87,49 @@ class CRMConnector
 
         $this->registerAdminBarMenu();
 
+        $this->_events();
+
+        $this->_set_data();
+
+    }
+
+    private function _set_data()
+    {
+    }
+
+    private function _events()
+    {
+        $this->data['events'][ChapterLeadershipChanged::class] = (new ChapterLeadershipChanged())
+            ->addSubscriber(new SetChapterLeadershipName())
+            ->addSubscriber(new SetChapterLeadershipChapterOperationsEmail())
+            ->addSubscriber(new SetChapterLeadershipChapterOperationsName())
+            ->addSubscriber(new SetChapterLeadershipTitle())
+            ->addSubscriber(new SetChapterLeadershipIsCurrent())
+            ->addSubscriber(new SetChapterLeadershipIsFuture());
+    }
+
+    /**
+     * @param $post_id
+     * @param $post
+     * @param $update
+     */
+    public function after_save_meta( $post_id, $post, $update )
+    {
+        $post_type = get_post_type($post_id);
+        $meta = get_post_meta($post_id);
+        $args = [$meta, $post_id];
+        $priority = has_action('save_post', array($this, 'after_save_meta'));
+        remove_action('save_post', array($this, 'after_save_meta'), $priority);
+        switch($post_type) {
+            case 'chapter_leadership':
+                $this->data['events'][ChapterLeadershipChanged::class]->notify($args);
+                break;
+        }
+        add_action('save_post', array($this, 'after_save_meta'), 100, 3);
     }
 }
 
+global $CRMConnectorPlugin;
 $CRMConnectorPlugin = new CRMConnector();
 
 register_activation_hook( __FILE__, array($CRMConnectorPlugin, 'activate'));
@@ -85,22 +138,9 @@ add_action('init', array($CRMConnectorPlugin, 'initialize'));
 
 
 
-// fetch the user  testuser6
-/*$wp_user_object = new WP_User(12);*/
-// create a role
-add_role( 'test_role', 'test role', [] );
-// add the role to the user
-/*$wp_user_object->set_role('test_role');*/
 
 
-// Remove items from the admin bar
-/*function remove_from_admin_bar($wp_admin_bar) {
-        $wp_admin_bar->remove_node('updates');
-        $wp_admin_bar->remove_node('comments');
-        $wp_admin_bar->remove_node('new-content');
-        $wp_admin_bar->remove_node('wp-logo');
-}
-add_action('admin_bar_menu', 'remove_from_admin_bar', 999)*/;
+
 
 
 

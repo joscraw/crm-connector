@@ -20,6 +20,8 @@ use CRMConnector\Crons\Models\BatchContactImportCronModel;
 use CRMConnector\Crons\Models\BatchListExportCronModel;
 use CRMConnector\Crons\Models\BatchSubscriptionCronModel;
 use CRMConnector\Database\CustomPostTypeCreator;
+use CRMConnector\Events\ChapterInvitationChangedPublisher;
+use CRMConnector\Events\CreateChapterInvitationNameSubscriber;
 use finfo;
 use CRMConnector\Utils\CRMCFunctions;
 use CRMConnector\Api\GuzzleFactory;
@@ -36,7 +38,7 @@ class Backend
 {
     use Renderable;
 
-    private $data;
+    public $data;
 
     public function __construct()
     {

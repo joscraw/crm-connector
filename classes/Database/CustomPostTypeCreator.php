@@ -23,6 +23,7 @@ class CustomPostTypeCreator
         self::create_scholarships_posttype();
         self::create_potential_duplicates_posttype();
         self::create_reports_posttype();
+        self::create_chapter_leadership();
     }
 
     private static function create_partners_posttype() {
@@ -654,5 +655,60 @@ class CustomPostTypeCreator
 
         // Registering your Custom Post Type
         register_post_type( 'reports', $args );
+    }
+
+    private static function create_chapter_leadership()
+    {
+        // Set UI labels for Custom Post Type
+        $labels = array(
+            'name'                => 'Chapter Leadership',
+            'singular_name'       => 'Chapter Leadership',
+            'menu_name'           => 'Chapter Leadership',
+            'parent_item_colon'   => 'Parent Chapter Leadership',
+            'all_items'           => 'All Chapter Leadership',
+            'view_item'           => 'View Chapter Leadership',
+            'add_new_item'        => 'Add New Chapter Leadership',
+            'add_new'             => 'Add New',
+            'edit_item'           => 'Edit Chapter Leadership',
+            'update_item'         => 'Update Chapter Leadership',
+            'search_items'        => 'Search Chapter Leadership',
+            'not_found'           => 'Not Found',
+            'not_found_in_trash'  => 'Not found in Trash',
+        );
+
+        // Set other options for Custom Post Type
+
+        $args = array(
+            'label'               => 'chapter_leadership',
+            'description'         => 'Chapter Leadership',
+            'labels'              => $labels,
+            // Features this CPT supports in Post Editor
+            'supports'            => array( 'title', 'custom-fields' ),
+            // You can associate this CPT with a taxonomy or custom taxonomy.
+            'taxonomies'          => array(),
+            /* A hierarchical CPT is like Pages and can have
+            * Parent and child items. A non-hierarchical CPT
+            * is like Posts.
+            */
+            'hierarchical'        => false,
+            'public'              => true,
+            'show_ui'             => true,
+            'show_in_menu'        => true,
+            'show_in_nav_menus'   => true,
+            'show_in_admin_bar'   => true,
+            'menu_position'       => 5,
+            'can_export'          => true,
+            'has_archive'         => true,
+            'exclude_from_search' => false,
+            'publicly_queryable'  => true,
+            'capability_type'     => array('cap_chapter_leadership','cap_chapter_leaderships'),
+            'map_meta_cap'        => true,
+            /*'capabilities' => array(
+                'create_posts' => 'do_not_allow', // false < WP 4.5, credit @Ewout
+            ),*/
+        );
+
+        // Registering your Custom Post Type
+        register_post_type( 'chapter_leadership', $args );
     }
 }

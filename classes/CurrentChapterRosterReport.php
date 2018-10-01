@@ -7,6 +7,7 @@ use CRMConnector\Database\ChapterSearch;
 use CRMConnector\Database\ContactSearch;
 use CRMConnector\Database\DatabaseQuery;
 use CRMConnector\ReportGeneratorInterface;
+use CRMConnector\Utils\CRMCFunctions;
 use WP_Query;
 
 /**
@@ -16,11 +17,26 @@ use WP_Query;
 class CurrentChapterRosterReport implements ReportGeneratorInterface
 {
     use DatabaseQuery;
+    use Fileable;
 
     /**
      * @var string
      */
     private $report_id;
+
+    /**
+     * @var array
+     */
+    private $columns = [
+        'first_name',
+        'last_name',
+        'email',
+        'contact_type',
+        'join_year',
+        'phone',
+        'mobile',
+        'account_name'
+    ];
 
     /**
      * CurrentChapterRosterReport constructor.
@@ -32,27 +48,60 @@ class CurrentChapterRosterReport implements ReportGeneratorInterface
     }
 
     /**
-     * @return mixed
+     * Creates the report and sends it to the browser
      */
     public function generate()
     {
-        $search = new ContactSearch();
-        $contacts = $search->get_all_contacts_normalized();
+        $args = [
+            'post_type' => 'contacts',
+            'posts_per_page' => -1,
+        ];
 
-        $chapter_search = new ChapterSearch();
-        $chapters = $chapter_search->get_all_chapters_normalized();
+        $contacts = get_posts($args);
+
+        $args = [
+            'post_type' => 'chapters',
+            'posts_per_page' => -1,
+        ];
+
+        $chapters = get_posts($args);
 
         $rows = [];
 
         foreach($contacts as $contact)
         {
             $row = [];
-            $row['first_name'] = !empty(explode(" ", $contact->full_name)[0]) ? explode(" ", $contact->full_name)[0] : "";
-            $row['last_name'] = !empty(explode(" ", $contact->full_name)[1]) ? explode(" ", $contact->full_name)[1] : "";
-            $row['email'] = !empty($contact->email) ? $contact->email : "";
-            $row['contact_type'] = !empty($contact->contact_type) ? $contact->contact_type : "";
-            $rows[] = $row;
+            $row['first_name'] = !empty(explode(" ", get_post_meta($contact->ID, 'full_name', true))[0]) ? explode(" ", get_post_meta($contact->ID, 'full_name', true))[0] : "";
+            $row['last_name'] = !empty(explode(" ", get_post_meta($contact->ID, 'full_name', true))[1]) ? explode(" ", get_post_meta($contact->ID, 'full_name', true))[1] : "";
+            $row['email'] = get_post_meta($contact->ID, 'email', true);
+            $row['contact_type'] = get_post_meta($contact->ID, 'contact_type', true);
+            $row['join_year'] = get_post_meta($contact->ID, 'join_year', true);
+            $row['phone'] = get_post_meta($contact->ID, 'phone', true);
+            $row['mobile'] = get_post_meta($contact->ID, 'mobile', true);
+            $row['account_name'] = "";
+
+            foreach($chapters as $chapter)
+            {
+                if($chapter->ID == get_post_meta($contact->ID, 'account_name', true))
+                {
+                    $row['account_name'] = get_post_meta($chapter->ID, 'account_name', true);
+                    break;
+                }
+            }
+            $rows[] = array_values($row);
         }
-        $name = "Josh";
+
+        array_unshift($rows, $this->columns);
+
+        $fh = fopen('php://output', 'w');
+
+        foreach($rows as $row)
+        {
+            fputcsv($fh, $row);
+        }
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename='.$this->generate_file_name().'.csv');
+
     }
 }
