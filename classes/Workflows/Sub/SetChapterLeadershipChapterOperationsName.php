@@ -29,11 +29,11 @@ class SetChapterLeadershipChapterOperationsName implements SubscriberInterface
         }
         $chapter_leadership_id = $args[1];
         $chapter_id = $args[0]['chapter'][0];
-        $meta = get_post_meta($chapter_id, 'chapter_operations_name');
+        $meta = get_post_meta($chapter_leadership_id, 'chapter_operations_manager');
         if(empty($meta[0])) {
             return;
         }
         $me_manager_name = $meta[0];
-        update_post_meta($chapter_leadership_id, 'chapter_operations_manager', $me_manager_name);
+        update_post_meta($chapter_id, 'chapter_operations_name', $me_manager_name);
     }
 }
