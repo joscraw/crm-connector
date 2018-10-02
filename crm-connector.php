@@ -24,6 +24,8 @@ use CRMConnector\Workflows\Sub\SetChapterLeadershipName;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipTitle;
 use CRMConnector\Workflows\Sub\AlertManagerOfChapterLeadershipChange;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipChapterOperationsManager;
+use CRMConnector\Workflows\Sub\SetChapterAdvisor;
+use CRMConnector\Workflows\Sub\SetChapterPresident;
 
 $autoload_path = __DIR__ . '/vendor/autoload.php';
 
@@ -114,7 +116,9 @@ class CRMConnector
             ->addSubscriber(new SetChapterLeadershipIsCurrent())
             ->addSubscriber(new SetChapterLeadershipIsFuture())
             ->addSubscriber(new AlertManagerOfChapterLeadershipChange())
-            ->addSubscriber(new SetChapterLeadershipChapterOperationsManager());
+            ->addSubscriber(new SetChapterLeadershipChapterOperationsManager())
+            ->addSubscriber(new SetChapterAdvisor())
+            ->addSubscriber(new SetChapterPresident());
     }
 
     /**
