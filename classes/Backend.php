@@ -111,7 +111,7 @@ class Backend
         $errors = get_transient('errors');
         $notice = get_transient('notice');
 
-        if('lists' == $screen->post_type && in_array($screen->base, ['edit', 'post'])){
+        /*if('lists' == $screen->post_type && in_array($screen->base, ['edit', 'post'])){*/
 
             if (!empty($errors)){?>
                 <div class="error">
@@ -129,7 +129,7 @@ class Backend
                 <?php
             }
 
-        }
+     /*   }*/
 
         delete_transient('notice');
         delete_transient('errors');

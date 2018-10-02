@@ -49,6 +49,15 @@ class AlertManagerOfChapterLeadershipChange implements SubscriberInterface
             $args[0]['position'][0]
         );
         $chapter_operations_managers = get_post_meta($args[0]['chapter'][0], 'chapter_operations_manager');
+        $chapter_operations_managers = array_filter($chapter_operations_managers, function($value) {
+            $is_null = is_null($value);
+            $is_empty = ($value == '');
+            return !($is_empty || $is_null);
+        });
+        if(empty($chapter_operations_managers)) {
+            set_transient('errors', [sprintf("There need to be chapter operation managers assigned to the chapter associated with this Chapter Leadership for Workflow %s to trigger",self::class)]);
+            return;
+        }
         $mailer = new ChapterLeadershipChangedMailer();
         $mail_args = [
             'Subject'   => 'Chapter Leadership Changed',
