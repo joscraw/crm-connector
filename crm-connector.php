@@ -22,6 +22,7 @@ use CRMConnector\Workflows\Sub\SetChapterLeadershipIsCurrent;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipIsFuture;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipName;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipTitle;
+use CRMConnector\Workflows\Sub\AlertManagerOfChapterLeadershipChange;
 
 $autoload_path = __DIR__ . '/vendor/autoload.php';
 
@@ -55,7 +56,6 @@ class CRMConnector
      */
     public $version = '1.0.0';
 
-
     public function __construct()
     {
     }
@@ -72,6 +72,7 @@ class CRMConnector
      */
     public function initialize()
     {
+        add_action( 'save_post', array($this, 'pre_save_meta'), 1, 3 );
         add_action( 'save_post', array($this, 'after_save_meta'), 100, 3 );
 
         if (is_admin()) {
@@ -95,6 +96,11 @@ class CRMConnector
 
     private function _set_data()
     {
+        $this->data['current_user'] = $current_user = !empty(wp_get_current_user()) ? wp_get_current_user() : '';
+        $this->data['current_user_email'] = !empty($current_user->user_email) ? $current_user->user_email : '';
+        $this->data['current_user_first_name'] = !empty($current_user->user_firstname) ? $current_user->user_firstname : '';
+        $this->data['current_user_last_name'] = !empty($current_user->user_lastname) ? $current_user->user_lastname : '';
+
     }
 
     private function _events()
@@ -105,7 +111,23 @@ class CRMConnector
             ->addSubscriber(new SetChapterLeadershipChapterOperationsName())
             ->addSubscriber(new SetChapterLeadershipTitle())
             ->addSubscriber(new SetChapterLeadershipIsCurrent())
-            ->addSubscriber(new SetChapterLeadershipIsFuture());
+            ->addSubscriber(new SetChapterLeadershipIsFuture())
+            ->addSubscriber(new AlertManagerOfChapterLeadershipChange());
+    }
+
+    /**
+     * @param $post_id
+     * @param $post
+     * @param $update
+     */
+    public function pre_save_meta( $post_id, $post, $update )
+    {
+        if(!empty($this->data['pre_save_meta'])) {
+            return;
+        }
+
+        $meta = get_post_meta($post_id);
+        $this->data['pre_save_meta'] = $meta;
     }
 
     /**
@@ -118,6 +140,7 @@ class CRMConnector
         $post_type = get_post_type($post_id);
         $meta = get_post_meta($post_id);
         $args = [$meta, $post_id];
+        $args['pre_save_meta'] = !empty($this->data['pre_save_meta']) ? $this->data['pre_save_meta'] : [];
         $priority = has_action('save_post', array($this, 'after_save_meta'));
         remove_action('save_post', array($this, 'after_save_meta'), $priority);
         switch($post_type) {
@@ -126,6 +149,8 @@ class CRMConnector
                 break;
         }
         add_action('save_post', array($this, 'after_save_meta'), 100, 3);
+
+        unset($this->data['pre_save_meta']);
     }
 }
 
