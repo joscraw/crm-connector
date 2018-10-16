@@ -2,6 +2,8 @@
 
 namespace CRMConnector;
 
+use CRMConnector\Utils\CRMCFunctions;
+
 /**
  * Class Frontend
  * @package CRMConnector
