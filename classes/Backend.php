@@ -82,10 +82,6 @@ class Backend
 
         add_action('admin_notices', array($this, 'admin_notices'));
 
-        add_filter('acf/load_field/name=chapter_chapter_officer_select', array($this, 'acf_load_chapter_officer_field_choices_for_given_chapter'));
-
-        add_filter('acf/load_field/name=event_chapter_select_for_officer', array($this, 'acf_load_chapter_field_choice_contact_is_assigned_to'));
-
         add_filter('acf/load_field/name=custom_list_export_query_field_name', array($this, 'acf_load_contact_post_type_field_names'));
 
         add_action( 'admin_post_generate_report', array($this, 'generate_report'));
@@ -689,95 +685,6 @@ class Backend
         echo json_encode($result);
         exit;
     }
-
-    public function acf_load_chapter_officer_field_choices_for_given_chapter( $field ) {
-
-        // reset choices
-        $field['choices'] = array();
-
-        global $post;
-
-        $id = $post->ID;
-
-        $args = [
-            'post_type' => 'contacts',
-            'posts_per_page' => -1,
-            'meta_query' => array(
-            array(
-                'key' => 'account_name',
-                'value' => $id,
-                'compare' => '=',
-            ))
-        ];
-
-        $query = new WP_Query($args);
-
-        if ($query->have_posts() ) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $contact_id = get_the_ID();
-                $contact_name = get_post_meta($contact_id, 'full_name', true);
-                $field['choices'][$contact_id] = $contact_name;
-            }
-        }
-
-       /* wp_reset_postdata();
-        wp_reset_query();*/
-
-        // return the field
-        return $field;
-
-    }
-
-
-    public function acf_load_chapter_field_choice_contact_is_assigned_to( $field ) {
-
-        // reset choices
-        $field['choices'] = array();
-
-        global $crmConnectorFrontend;
-        $current_user_id = $crmConnectorFrontend->data['current_user_id'];
-
-        if($current_user_id === 0 ||
-            !$crmConnectorFrontend->data['current_user'] instanceof \WP_User ||
-            !in_array( 'chapter_officer', (array) $crmConnectorFrontend->data['current_user']->roles ))
-        {
-            echo '<p>You must be assigned to a chapter before you can create events!</p>';
-            return $field;
-        }
-
-        $args = [
-            'post_type' => 'contacts',
-            'posts_per_page' => 1,
-            'meta_query' => [
-                [
-                    'key' => 'portal_user',
-                    'value' => $current_user_id,
-                    'compare' => '=',
-                ]
-
-            ]
-        ];
-
-        wp_reset_postdata();
-        wp_reset_query();
-
-        $query = new WP_Query($args);
-
-        if ($query->have_posts() ) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $chapter_id = get_post_meta(get_the_ID(), 'account_name', true);
-                $chapter_name = get_post_meta($chapter_id, 'account_name', true);
-                $field['choices'][$chapter_id] = $chapter_name;
-                break;
-            }
-        }
-
-        // return the field
-        return $field;
-    }
-
 
     public function acf_load_contact_post_type_field_names( $field ) {
 

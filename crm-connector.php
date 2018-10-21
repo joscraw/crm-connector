@@ -16,6 +16,8 @@ use CRMConnector\Database\DatabaseTableCreator;
 use CRMConnector\Support\DatabaseTables;
 use CRMConnector\Utils\CRMCFunctions;
 use CRMConnector\Workflows\Pub\ChapterLeadershipChanged;
+use CRMConnector\Workflows\Pub\ChapterUpdateChanged;
+use CRMConnector\Workflows\Pub\ContactChanged;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipChapterOperationsName;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipChapterOperationsEmail;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipIsCurrent;
@@ -26,6 +28,9 @@ use CRMConnector\Workflows\Sub\AlertManagerOfChapterLeadershipChange;
 use CRMConnector\Workflows\Sub\SetChapterLeadershipChapterOperationsManager;
 use CRMConnector\Workflows\Sub\SetChapterAdvisor;
 use CRMConnector\Workflows\Sub\SetChapterPresident;
+use CRMConnector\Workflows\Sub\SetChapterUpdateChapter;
+use CRMConnector\Workflows\Sub\SetChapterUpdateSender;
+use CRMConnector\Workflows\Sub\SetContactTitle;
 use CRMConnector\Workflows\Sub\SetCurrentChapterLeadership;
 
 $autoload_path = __DIR__ . '/vendor/autoload.php';
@@ -121,6 +126,13 @@ class CRMConnector
             ->addSubscriber(new SetChapterAdvisor())
             ->addSubscriber(new SetChapterPresident())
             ->addSubscriber(new SetCurrentChapterLeadership());
+
+        $this->data['events'][ChapterUpdateChanged::class] = (new ChapterUpdateChanged())
+            ->addSubscriber(new SetChapterUpdateChapter())
+            ->addSubscriber(new SetChapterUpdateSender());
+
+        $this->data['events'][ContactChanged::class] = (new ContactChanged())
+            ->addSubscriber(new SetContactTitle());
     }
 
     /**
@@ -154,6 +166,12 @@ class CRMConnector
         switch($post_type) {
             case 'chapter_leadership':
                 $this->data['events'][ChapterLeadershipChanged::class]->notify($args);
+                break;
+            case 'chapter_update':
+                $this->data['events'][ChapterUpdateChanged::class]->notify($args);
+                break;
+            case 'contacts':
+                $this->data['events'][ContactChanged::class]->notify($args);
                 break;
         }
         add_action('save_post', array($this, 'after_save_meta'), 100, 3);

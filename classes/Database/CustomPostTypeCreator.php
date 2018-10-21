@@ -30,6 +30,7 @@ class CustomPostTypeCreator
         self::distinguished_member();
         self::benefits();
         self::partner_opportunities();
+        self::officer_materials();
     }
 
     private static function create_contact_posttype() {
@@ -1048,5 +1049,60 @@ class CustomPostTypeCreator
 
         // Registering your Custom Post Type
         register_post_type( 'partner_opportunity', $args );
+    }
+
+    private static function officer_materials()
+    {
+        // Set UI labels for Custom Post Type
+        $labels = array(
+            'name'                => 'Officer Material',
+            'singular_name'       => 'Officer Material',
+            'menu_name'           => 'Officer Material',
+            'parent_item_colon'   => 'Officer Material',
+            'all_items'           => 'All Officer Materials',
+            'view_item'           => 'View Officer Materials',
+            'add_new_item'        => 'Add New Officer Material',
+            'add_new'             => 'Add New',
+            'edit_item'           => 'Edit Officer Material',
+            'update_item'         => 'Update Officer Material',
+            'search_items'        => 'Search Officer Materials',
+            'not_found'           => 'Not Found',
+            'not_found_in_trash'  => 'Not found in Trash',
+        );
+
+        // Set other options for Custom Post Type
+
+        $args = array(
+            'label'               => 'officer_materials',
+            'description'         => 'Officer Materials',
+            'labels'              => $labels,
+            // Features this CPT supports in Post Editor
+            'supports'            => array( 'title', 'custom-fields' ),
+            // You can associate this CPT with a taxonomy or custom taxonomy.
+            'taxonomies'          => array(),
+            /* A hierarchical CPT is like Pages and can have
+            * Parent and child items. A non-hierarchical CPT
+            * is like Posts.
+            */
+            'hierarchical'        => false,
+            'public'              => true,
+            'show_ui'             => true,
+            'show_in_menu'        => true,
+            'show_in_nav_menus'   => true,
+            'show_in_admin_bar'   => true,
+            'menu_position'       => 5,
+            'can_export'          => true,
+            'has_archive'         => true,
+            'exclude_from_search' => false,
+            'publicly_queryable'  => true,
+            'capability_type'     => array('cap_officer_material','cap_officer_materials'),
+            'map_meta_cap'        => true,
+            /*'capabilities' => array(
+                'create_posts' => 'do_not_allow', // false < WP 4.5, credit @Ewout
+            ),*/
+        );
+
+        // Registering your Custom Post Type
+        register_post_type( 'officer_material', $args );
     }
 }
