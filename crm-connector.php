@@ -11,6 +11,7 @@ License: GPLv2 or later
 
 use CRMConnector\Backend;
 use CRMConnector\Concerns\CrmConnectorAdminBar;
+use CRMConnector\Crons\Initializers\ChapterUpdateMailerCronInitializer;
 use CRMConnector\Frontend;
 use CRMConnector\Database\DatabaseTableCreator;
 use CRMConnector\Support\DatabaseTables;
@@ -169,6 +170,12 @@ class CRMConnector
                 break;
             case 'chapter_update':
                 $this->data['events'][ChapterUpdateChanged::class]->notify($args);
+
+                if(!$this->data['events'][ChapterUpdateChanged::class]->has_errors()) {
+                    // If no manual errors have been thrown
+                    ChapterUpdateMailerCronInitializer::enqueue_cron($args[1]);
+                }
+
                 break;
             case 'contacts':
                 $this->data['events'][ContactChanged::class]->notify($args);

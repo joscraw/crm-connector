@@ -2,6 +2,7 @@
 
 namespace CRMConnector\Mailers;
 
+use CRMConnector\Utils\Logger;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -22,9 +23,21 @@ class AbstractBaseMailer
      */
     protected $mail;
 
+    /**
+     * @var Logger
+     */
+    protected $logger;
+
     public function __construct()
     {
         $this->mail = new PHPMailer(true);
+    }
+
+    /**
+     * @return PHPMailer
+     */
+    public function get_mail() {
+        return $this->mail;
     }
 
     /**
@@ -104,11 +117,7 @@ class AbstractBaseMailer
      */
     public function send()
     {
-        try {
-            $this->mail->send();
-        } catch (Exception $e) {
-            echo 'Message could not be sent. Mailer Error: ', $this->mail->ErrorInfo;
-        }
+        $this->mail->send();
     }
 
     /**

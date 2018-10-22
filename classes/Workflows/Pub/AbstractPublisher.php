@@ -11,7 +11,9 @@ use CRMConnector\Workflows\Sub\SubscriberInterface;
  */
 class AbstractPublisher implements PublisherInterface
 {
-
+    /**
+     * @var array
+     */
     private $observers;
 
     /**
@@ -26,10 +28,27 @@ class AbstractPublisher implements PublisherInterface
         }
     }
 
+    /**
+     * @param SubscriberInterface $subscriber
+     * @return $this
+     */
     public function addSubscriber(SubscriberInterface $subscriber)
     {
         $this->observers[] = $subscriber;
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function has_errors()
+    {
+        foreach($this->observers as $observer) {
+            if($observer->has_errors()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

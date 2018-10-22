@@ -6,7 +6,7 @@ namespace CRMConnector\Workflows\Sub;
  * Class SetChapterUpdateChapter
  * @package CRMConnector\Workflows\Sub
  */
-class SetChapterUpdateChapter implements SubscriberInterface
+class SetChapterUpdateChapter extends AbstractSubscriber implements SubscriberInterface
 {
     /**
      * @param $args
@@ -34,6 +34,7 @@ class SetChapterUpdateChapter implements SubscriberInterface
         $posts = get_posts($args);
         if(count($posts) === 0)
         {
+            $this->set_has_errors(true);
             set_transient('errors', ['You must be added as a contact in the system.']);
             return;
         }

@@ -6,7 +6,7 @@ namespace CRMConnector\Workflows\Sub;
  * Class SetChapterUpdateSender
  * @package CRMConnector\Workflows\Sub
  */
-class SetChapterUpdateSender implements SubscriberInterface
+class SetChapterUpdateSender extends AbstractSubscriber implements SubscriberInterface
 {
     /**
      * @param $args
@@ -34,6 +34,7 @@ class SetChapterUpdateSender implements SubscriberInterface
         $posts = get_posts($args);
         if(count($posts) === 0)
         {
+            $this->set_has_errors(true);
             set_transient('errors', ['You must be added as a contact in the system before you can send a chapter update.']);
             return;
         }

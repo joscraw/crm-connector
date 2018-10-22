@@ -36,7 +36,7 @@ class Logger
      */
     private function format_message($message)
     {
-        $log  = "User: ".$_SERVER['REMOTE_ADDR'].' - '.date("F j, Y, g:i a").PHP_EOL.
+        $log  = date("F j, Y, g:i a").PHP_EOL.
             "Attempt: ".($message).PHP_EOL.
             "-------------------------".PHP_EOL;
         return $log;
