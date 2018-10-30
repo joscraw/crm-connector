@@ -2,7 +2,7 @@
 
 namespace CRMConnector\Database;
 
-use TribeEvents;
+use Tribe__Events__Main;
 use WP_Query;
 
 /**
@@ -16,15 +16,9 @@ class EventSearch
      */
     public function getEventsForLoggedInUserByRole()
     {
-        global $crmConnectorFrontend;
-
-        $current_user_id = $crmConnectorFrontend->data['current_user_id'];
-        $current_user_roles = $crmConnectorFrontend->data['current_user_roles'];
-
-        if($current_user_id === 0 || empty($current_user_roles))
-        {
-            return false;
-        }
+        $user = wp_get_current_user();
+        $current_user_roles = $user->roles;
+        $current_user_id = get_current_user_id();
 
         // GET THE EVENTS FOR A STUDENT IF THE USER HAS THAT ROLE
         if (in_array( 'student', $current_user_roles ) ||
@@ -65,7 +59,7 @@ class EventSearch
 
             $args = array(
                 'post_status' => 'publish',
-                'post_type' => array(TribeEvents::POSTTYPE),
+                'post_type' => array(Tribe__Events__Main::POSTTYPE),
                 'posts_per_page' => 10,
                 'meta_query' => array(
                     array(
@@ -88,7 +82,7 @@ class EventSearch
 
             $args = array(
                 'post_status' => 'publish',
-                'post_type' => array(TribeEvents::POSTTYPE),
+                'post_type' => array(Tribe__Events__Main::POSTTYPE),
                 'posts_per_page' => 10,
             );
 
@@ -160,7 +154,7 @@ class EventSearch
 
             $args = array(
                 'post_status' => 'publish',
-                'post_type' => array(TribeEvents::POSTTYPE),
+                'post_type' => array(Tribe_E::POSTTYPE),
                 'posts_per_page' => 10,
                 'meta_query' => array(
                     array(
