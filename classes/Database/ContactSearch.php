@@ -2,6 +2,8 @@
 
 namespace CRMConnector\Database;
 
+use CRMConnector\Models\Contact;
+
 /**
  * Class ContactSearch
  * @package CRMConnector\Database
@@ -44,21 +46,20 @@ class ContactSearch
             'post_type' => 'contacts',
             'posts_per_page' => 1,
             'meta_query' => array(
+                'relation' => 'OR',
                 array(
                     'key' => 'email',
                     'value' => $email,
                     'compare' => '=',
                 ),
+                array(
+                    'key' => 'school_email',
+                    'value' => $email,
+                    'compare' => '=',
+                ),
             ),
         ];
-
         $posts = get_posts($args);
-
-        if(count($posts) === 0)
-        {
-            return false;
-        }
-
         return $posts;
     }
 

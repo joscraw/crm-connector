@@ -12,7 +12,6 @@ use CRMConnector\DeDuplicate;
 class Contact
 {
     use DatabaseAttributes;
-    use DeDuplicate;
 
     public function __get($property)
     {
@@ -39,21 +38,5 @@ class Contact
         {
             $this->$key = $value;
         }
-    }
-
-    /**
-     * @return bool
-     */
-    public function isDuplicate()
-    {
-        if($this->almost_certain_duplicate($this) ||
-        $this->very_likely_duplicate($this) ||
-        $this->needs_strong_review_duplicate($this) ||
-        $this->potential_duplicate($this))
-        {
-            return true;
-        }
-
-        return false;
     }
 }
