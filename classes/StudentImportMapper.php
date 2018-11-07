@@ -5,6 +5,7 @@ namespace CRMConnector;
 use CRMConnector\Models\Collection;
 use CRMConnector\Models\Contact;
 use PhpOffice\PhpSpreadsheet\Worksheet\RowIterator;
+use CRMConnector\StudentImportContactTransformer;
 
 /**
  * Class StudentImportMapper
@@ -12,9 +13,6 @@ use PhpOffice\PhpSpreadsheet\Worksheet\RowIterator;
  */
 class StudentImportMapper extends ExcelMapper
 {
-
-    use StudentImportContactTransformer;
-
     /**
      * @var array
      */
@@ -31,6 +29,11 @@ class StudentImportMapper extends ExcelMapper
     private $potential_duplicates;
 
     /**
+     * @var StudentImportContactTransformer
+     */
+    private $transformer;
+
+    /**
      * StudentImportMapper constructor.
      * @param $rowIterator
      * @param $database_column_names
@@ -43,6 +46,8 @@ class StudentImportMapper extends ExcelMapper
         $this->database_column_names = $database_column_names;
 
         $this->selected_file_columns = $selected_file_columns;
+
+        $this->transformer = new StudentImportContactTransformer();
 
         parent::__construct($rowIterator);
     }
@@ -60,6 +65,8 @@ class StudentImportMapper extends ExcelMapper
             $this->columns[] = $cell->getValue();
         }
 
+        $this->rowIterator->next();
+
         $cellIterator = $this->rowIterator->current()->getCellIterator();
 
         foreach($cellIterator as $index => $cell)
@@ -73,7 +80,7 @@ class StudentImportMapper extends ExcelMapper
             $record[$this->database_column_names[$key]] = $values[$selectedFileColumn];
         }
 
-        $record = $this->transform_record($record);
+        $record = $this->transformer->transform_record($record);
 
         $contact = new Contact();
 

@@ -194,11 +194,13 @@ class BatchContactImportCronModel
     }
 
     /**
+     * Returning just one error at a time
+     *
      * @return mixed
      */
     public function getErrors()
     {
-        return $this->errors;
+        return [array_shift($this->errors['main'])];
     }
 
 
@@ -208,8 +210,8 @@ class BatchContactImportCronModel
     public function is_valid()
     {
         $this->validate_student_file()
-            ->validate_chapter_id()
-            ->validate_database_column_names();
+                ->validate_chapter_id()
+                ->validate_database_column_names();
 
         return count($this->errors) === 0;
     }
@@ -241,7 +243,7 @@ class BatchContactImportCronModel
 
     private function validate_student_file()
     {
-        if(empty($this->student_file))
+        if($this->student_file['name'] == "")
         {
             $this->errors['main'][] = 'Please add an excel file to import';
             return $this;
@@ -311,19 +313,19 @@ class BatchContactImportCronModel
         }
 
         // check to make sure that a student email has been added to the import
-        if(!in_array('Personal Email', unserialize($this->getDatabaseColumnNames())))
+        if(!in_array('email', unserialize($this->getDatabaseColumnNames())))
         {
             $this->errors['main'][] = 'You must map an email address!';
             return $this;
         }
 
-        if(!in_array('First Name', unserialize($this->getDatabaseColumnNames())))
+        if(!in_array('first_name', unserialize($this->getDatabaseColumnNames())))
         {
             $this->errors['main'][] = 'You must map in a first name!';
             return $this;
         }
 
-        if(!in_array('Last Name', unserialize($this->getDatabaseColumnNames())))
+        if(!in_array('last_name', unserialize($this->getDatabaseColumnNames())))
         {
             $this->errors['main'][] = 'You must map in a last name!';
             return $this;

@@ -6,8 +6,32 @@ namespace CRMConnector;
  * Class StudentImportContactTransformer
  * @package CRMConnector
  */
-trait StudentImportContactTransformer
+class StudentImportContactTransformer
 {
+    /**
+     * @var array
+     */
+    public static $default_columns = [
+            'first_name',
+            'last_name',
+            'full_name',
+            'email',
+            'school_email',
+            'contact_type',
+            'permanent_address_1',
+            'permanent_address_2',
+            'permanent_address_3',
+            'permanent_city',
+            'permanent_state',
+            'permanent_zip',
+            'current_address_1',
+            'current_address_2',
+            'current_address_3',
+            'current_city',
+            'current_state',
+            'current_zip',
+        ];
+
     /**
      * Transform the record into a format used by the Custom Post Type to insert a record
      *
@@ -17,22 +41,24 @@ trait StudentImportContactTransformer
     public function transform_record(array $record)
     {
         return [
+            'first_name'            =>  isset($record['first_name']) ? trim($record['first_name']) : '',
+            'last_name'             =>  isset($record['last_name']) ? trim($record['last_name']) : '',
             'full_name'             =>  trim($this->format_name($record)), // This should always have a value since a contact name is required
-            'email'                 =>  isset($record['Personal Email']) ? trim($record['Personal Email']) : '',
-            'school_email'          =>  isset($record['School Email']) ? trim($record['School Email']) : '',
+            'email'                 =>  isset($record['email']) ? trim($record['email']) : '',
+            'school_email'          =>  isset($record['school_email']) ? trim($record['school_email']) : '',
             'contact_type'          =>  'Prospect',
-            'permanent_address_1'   => isset($record['Permanent Address 1']) ? trim($record['Permanent Address 1']) : '',
-            'permanent_address_2'   => isset($record['Permanent Address 2']) ? trim($record['Permanent Address 2']) : '',
-            'permanent_address_3'   => isset($record['Permanent Address 3']) ? trim($record['Permanent Address 3']) : '',
-            'permanent_city'        => isset($record['Permanent City']) ? trim($record['Permanent City']) : '',
-            'permanent_state'       => isset($record['Permanent State']) ? trim($record['Permanent State']) : '',
-            'permanent_zip'         => isset($record['Permanent Zip']) ? trim($record['Permanent Zip']) : '',
-            'current_address_1'     => isset($record['Current Address 1']) ? trim($record['Current Address 1']) : '',
-            'current_address_2'     => isset($record['Current Address 2']) ? trim($record['Current Address 2']) : '',
-            'current_address_3'     => isset($record['Current Address 3']) ? trim($record['Current Address 3']) : '',
-            'current_city'          => isset($record['Current City']) ? trim($record['Current City']) : '',
-            'current_state'         => isset($record['Current State']) ? trim($record['Current State']) : '',
-            'current_zip'           => isset($record['Current Zip']) ? trim($record['Current Zip']) : '',
+            'permanent_address_1'   => isset($record['permanent_address_1']) ? trim($record['permanent_address_1']) : '',
+            'permanent_address_2'   => isset($record['permanent_address_2']) ? trim($record['permanent_address_2']) : '',
+            'permanent_address_3'   => isset($record['permanent_address_3']) ? trim($record['permanent_address_3']) : '',
+            'permanent_city'        => isset($record['permanent_city']) ? trim($record['permanent_city']) : '',
+            'permanent_state'       => isset($record['permanent_state']) ? trim($record['permanent_state']) : '',
+            'permanent_zip'         => isset($record['permanent_zip']) ? trim($record['permanent_zip']) : '',
+            'current_address_1'     => isset($record['current_address_1']) ? trim($record['current_address_1']) : '',
+            'current_address_2'     => isset($record['current_address_2']) ? trim($record['current_address_2']) : '',
+            'current_address_3'     => isset($record['current_address_3']) ? trim($record['current_address_3']) : '',
+            'current_city'          => isset($record['current_city']) ? trim($record['current_city']) : '',
+            'current_state'         => isset($record['current_state']) ? trim($record['current_state']) : '',
+            'current_zip'           => isset($record['current_zip']) ? trim($record['current_zip']) : '',
         ];
     }
 
@@ -43,10 +69,10 @@ trait StudentImportContactTransformer
     private function format_name($record)
     {
         return sprintf("%s %s %s %s",
-            isset($record['Prefix']) ? trim($record['Prefix']) : '',
-            isset($record['First Name']) ? trim($record['First Name']) : '',
-            isset($record['Last Name']) ? trim($record['Last Name']) : '',
-            isset($record['Suffix']) ? trim($record['Suffix']) : '');
+            isset($record['prefix']) ? trim($record['prefix']) : '',
+            isset($record['first_name']) ? trim($record['first_name']) : '',
+            isset($record['last_name']) ? trim($record['last_name']) : '',
+            isset($record['suffix']) ? trim($record['suffix']) : '');
 
     }
 
