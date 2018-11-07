@@ -19,6 +19,7 @@ use CRMConnector\Crons\Initializers\BatchSubscriptionCronInitializer;
 use CRMConnector\Crons\Models\BatchContactImportCronModel;
 use CRMConnector\Crons\Models\BatchListExportCronModel;
 use CRMConnector\Crons\Models\BatchSubscriptionCronModel;
+use CRMConnector\Database\ContactSearch;
 use CRMConnector\Database\CustomPostTypeCreator;
 use CRMConnector\Events\ChapterInvitationChangedPublisher;
 use CRMConnector\Events\CreateChapterInvitationNameSubscriber;
@@ -608,12 +609,11 @@ class Backend
         $rows = $spreadsheet->getActiveSheet()->toArray();
 
         $columnNames = array_shift($rows);
-        $student_import_file_mapping = get_option('student_import_file_mapping');
 
         $result = $this->json_response();
         $result['notices'] = ["Column Names Loaded Successfully", "Select as many or as few of the columns you would like to import."];
         $result['columns'] = $columnNames;
-        $result['student_import_file_mapping'] = $student_import_file_mapping;
+        $result['student_import_file_mapping'] = StudentImportContactTransformer::$default_columns;
         echo json_encode($result);
         exit;
     }

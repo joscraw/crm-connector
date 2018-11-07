@@ -75,10 +75,6 @@ class DatabaseTableCreator
 
             DatabaseTables::create($sql);
         }
-
-        $mapping = explode(",", file_get_contents(CRMCFunctions::plugin_dir() . '/config/default_column_names.csv'));
-        update_option('student_import_file_mapping', $mapping);
-
     }
 
 }

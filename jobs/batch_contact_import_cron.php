@@ -9,10 +9,9 @@ use CRMConnector\ExcelMapper;
 use CRMConnector\Models\Collection;
 use CRMConnector\StudentImportMapper;
 use CRMConnector\Utils\Logger;
-use CRMConnector\DeDuplicate;
 use PhpOffice\PhpSpreadsheet\Worksheet\RowIterator;
 
-require( dirname( __FILE__ ) . '/../../../../wp-load.php' );
+require( dirname( __FILE__ ) . '/../../../../wp/wp-load.php' );
 
 global $wpdb;
 
@@ -33,20 +32,18 @@ foreach($results as $result) {
     $chapter_id = $result->chapter_id;
     $file_upload_path = $result->file_upload_path;
     $logger = new Logger();
-
+    $contact_search = new ContactSearch();
 
     $logger->write(sprintf("Initializing Cron with id %s...", $cron_id));
 
     BatchContactImportCronInitializer::set_log_file($cron_id, $import_id, $logger);
-    /*BatchContactImportCronInitializer::progress_cron($cron_id, $import_id);*/
+    BatchContactImportCronInitializer::progress_cron($cron_id, $import_id);
 
-    try
-    {
+    try {
         $logger->write(sprintf("Loading Spreadsheet..."));
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file_upload_path);
     }
-    catch(\Exception $exception)
-    {
+    catch(\Exception $exception) {
         $logger->write(sprintf("Failed Loading Spreadsheet - %s...", $exception->getMessage()));
         $logger->write(sprintf("Terminating Process..."));
         BatchContactImportCronInitializer::fail_cron($cron_id, $import_id);
@@ -59,8 +56,6 @@ foreach($results as $result) {
 
     $logger->write(sprintf("Reducing Array of Data into %s Columns...", count($selected_file_columns)));
 
-    $contact_collection = [];
-
     $mapper = new StudentImportMapper(
         $spreadsheet->getActiveSheet()->getRowIterator(),
         $database_column_names,
@@ -68,29 +63,18 @@ foreach($results as $result) {
         );
 
     $collection = new Collection();
-    foreach($mapper as $index => $contact)
-    {
+    $potential_duplicates = new Collection();
+    foreach($mapper as $index => $contact) {
         $contact->account_name  = isset($result->chapter_id) ? trim($result->chapter_id) : '';
-
+        if(count($contact_search->get_from_email($contact->email)) > 0) {
+            $potential_duplicates->addItem($contact);
+            $logger->write(sprintf("Potential Duplicate. Email Already Exists In System %s.", $contact->email));
+            continue;
+        }
         $collection->addItem($contact);
     }
 
-    $potential_duplicates = new Collection();
-    foreach($collection as $key => $contact)
-    {
-        if($contact->isDuplicate())
-        {
-            $collection->deleteItem($key);
-
-            $potential_duplicates->addItem($contact);
-        }
-    }
-
-    $logger->write(sprintf("Inserting %s Contact Records Into Database Table wp_posts...", $collection->length()));
-    $i = 0;
-
-    foreach($collection as $contact)
-    {
+    foreach($collection as $contact) {
         // Insert the default data that Wordpress requires for a post
         $result = wp_insert_post([
             "post_title"    =>  $contact->full_name,
@@ -98,50 +82,39 @@ foreach($results as $result) {
             "post_status"   =>  'publish',
         ], true);
 
-        if($result instanceof WP_Error)
-        {
+        if($result instanceof WP_Error) {
             $error_messages = implode(',', $result->get_error_messages());
-            $logger->write(sprintf("Error Creating Contact %s. WP Error Messages: %s", $contact->full_name, $error_messages));
+            $logger->write(sprintf("Error Creating Contact %s. WP Error Messages: %s.", $contact->full_name, $error_messages));
             continue;
         }
 
-        $post_id = $result;
+        $logger->write(sprintf("Creating Contact %s.", $contact->email));
 
-        foreach($contact as $field => $value)
-        {
-            if(!update_field($field, $value, $post_id))
-            {
+        $post_id = $result;
+        foreach($contact as $field => $value) {
+            if(!update_field($field, $value, $post_id)) {
                 $logger->write(sprintf("Error Inserting Field: %s With Value: %s For Post: %s", $field, $value, $post_id));
             }
         }
     }
 
-    foreach($potential_duplicates as $contact)
-    {
+    foreach($potential_duplicates as $contact) {
         // Insert the default data that Wordpress requires for a post
         $result = wp_insert_post([
             "post_title"    =>  $contact->full_name,
             "post_type"     =>  'potential_duplicates',
             "post_status"   =>  'publish',
         ], true);
-
-        if($result instanceof WP_Error)
-        {
+        if($result instanceof WP_Error) {
             $error_messages = implode(',', $result->get_error_messages());
             $logger->write(sprintf("Error Creating Potential Duplicate %s. WP Error Messages: %s", $contact->full_name, $error_messages));
             continue;
         }
-
         $post_id = $result;
-
-        foreach($contact as $field => $value)
-        {
+        foreach($contact as $field => $value) {
             update_field($field, $value, $post_id);
         }
     }
-
     $logger->write(sprintf("Finished Cron %s.", $cron_id));
-
     BatchContactImportCronInitializer::succeed_cron($cron_id, $import_id);
-
 }
