@@ -15,6 +15,7 @@ require( dirname( __FILE__ ) . '/../../../../wp/wp-load.php' );
 
 global $wpdb;
 
+
 $results = $wpdb->get_results(sprintf("SELECT id, import_id, database_column_names, selected_file_columns, chapter_id, file_upload_path FROM %s%s WHERE status = '%s' AND failed_attempts <= 3 ORDER BY created_at DESC",
     $wpdb->prefix,
     'batch_import_contacts_cron',
@@ -37,7 +38,7 @@ foreach($results as $result) {
     $logger->write(sprintf("Initializing Cron with id %s...", $cron_id));
 
     BatchContactImportCronInitializer::set_log_file($cron_id, $import_id, $logger);
-    BatchContactImportCronInitializer::progress_cron($cron_id, $import_id);
+    /*BatchContactImportCronInitializer::progress_cron($cron_id, $import_id);*/
 
     try {
         $logger->write(sprintf("Loading Spreadsheet..."));
@@ -92,9 +93,11 @@ foreach($results as $result) {
 
         $post_id = $result;
         foreach($contact as $field => $value) {
-            if(!update_field($field, $value, $post_id)) {
+            if(!update_post_meta($post_id, $field, $value)) {
                 $logger->write(sprintf("Error Inserting Field: %s With Value: %s For Post: %s", $field, $value, $post_id));
+                continue;
             }
+            do_action('save_post', $post_id, get_post($post_id), true);
         }
     }
 

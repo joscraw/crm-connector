@@ -133,7 +133,8 @@ class CRMConnector
             ->addSubscriber(new SetChapterUpdateSender());
 
         $this->data['events'][ContactChanged::class] = (new ContactChanged())
-            ->addSubscriber(new SetContactTitle());
+            ->addSubscriber(new SetContactTitle())
+            ->addSubscriber(new \CRMConnector\Workflows\Sub\SetContactCodes());
     }
 
     /**
@@ -193,6 +194,8 @@ $CRMConnectorPlugin = new CRMConnector();
 register_activation_hook( __FILE__, array($CRMConnectorPlugin, 'activate'));
 
 add_action('init', array($CRMConnectorPlugin, 'initialize'));
+
+
 
 
 
