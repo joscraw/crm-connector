@@ -16,9 +16,11 @@ use CRMConnector\Concerns\Renderable;
 use CRMConnector\Crons\Initializers\BatchContactImportCronInitializer;
 use CRMConnector\Crons\Initializers\BatchListExportCronInitializer;
 use CRMConnector\Crons\Initializers\BatchSubscriptionCronInitializer;
+use CRMConnector\Crons\Initializers\GenerateReportCronInitializer;
 use CRMConnector\Crons\Models\BatchContactImportCronModel;
 use CRMConnector\Crons\Models\BatchListExportCronModel;
 use CRMConnector\Crons\Models\BatchSubscriptionCronModel;
+use CRMConnector\Crons\Models\GenerateReportCronModel;
 use CRMConnector\Database\ContactSearch;
 use CRMConnector\Database\CustomPostTypeCreator;
 use CRMConnector\Events\ChapterInvitationChangedPublisher;
@@ -335,7 +337,23 @@ class Backend
             unset($columns['date']);
 
             if(!isset( $columns['generate_report'] ))
-                $columns['generate_report'] = __( 'Generate Report' );
+            $columns['generate_report'] = __( 'Generate Report' );
+
+            if(!isset( $columns['status'] ))
+                $columns['status'] = __( 'Status' );
+
+            if(!isset( $columns['report_type'] ))
+                $columns['report_type'] = __( 'Report Type' );
+
+            if(!isset( $columns['created_at'] ))
+                $columns['created_at'] = __( 'Created At' );
+
+            if(!isset( $columns['completed_at'] ))
+                $columns['completed_at'] = __( 'Completed At' );
+
+            if(!isset( $columns['log_file'] ))
+                $columns['log_file'] = __( 'Log File' );
+
         }
 
         return $columns;
@@ -345,12 +363,43 @@ class Backend
     {
         $report = get_post_custom($post_id);
 
-        $url = '/wp/wp-admin/admin-post.php?report=' . $post_id . '&action=generate_report&report_type=' . $report['report_type'][0];
+        global $wpdb;
 
-        if ( $column_name == 'generate_report')
-        {
-            echo '<a target="_blank" href="'.$url.'">Generate Report</a>';
+        $result = $wpdb->get_row(sprintf("SELECT * FROM %s%s WHERE report_id = '%s'",
+            $wpdb->prefix,
+            'generate_report_cron',
+            $post_id
+        ));
+
+
+        if ( $column_name == 'generate_report') {
+            $url = sprintf("%s?report=%s&action=generate_report&report_type=%s",
+                admin_url('admin-post.php'),
+                $post_id,
+                $report['report_type'][0]
+            );
+
+            echo '<a href="'.$url.'">Generate Report</a>';
         }
+
+        if ( $column_name == 'status') {
+            printf( '%s', isset($result->status) ? $result->status : '');
+        }
+
+        if ( $column_name == 'report_type') {
+            printf( '%s', isset($result->report_type) ? $result->report_type : '');
+        }
+
+        if ( $column_name == 'created_at') {
+            printf( '%s', isset($result->created_at) ? $result->created_at : '');
+        }
+
+        if ( $column_name == 'completed_at') {
+            printf( '%s', isset($result->completed_at) ? $result->completed_at : '');
+        }
+
+        if ( $column_name == 'log_file')
+            printf( '<a target="_blank" href="%s">Log File</a>', $result->log_file ? CRMCFunctions::plugin_url() . '/logs/' . $result->log_file : '');
     }
 
     public function add_import_contacts_button_to_chapters_page()
@@ -714,23 +763,20 @@ class Backend
 
     public function generate_report()
     {
-        if(!isset($_GET['report_type']) || !isset($_GET['report']))
-        {
-            die("report could not be generated. Missing GET params");
+        deleteTransients();
+
+        $model = new GenerateReportCronModel();
+        $model->handle_request($_REQUEST);
+
+        if($model->is_valid() && GenerateReportCronInitializer::enqueue_cron($model)) {
+            set_transient('notice', 'Successfully Added Report to Queue For Generating.');
+            wp_redirect(admin_url('edit.php?post_type=reports'));
+            exit;
         }
 
-        $report_type = $_GET['report_type'];
-        $report_id = $_GET['report'];
-
-        $factory = ReportGeneratorFactory::getInstance($report_id);
-
-        if(!$generator = $factory->get($report_type))
-        {
-            die("Generator could not be found");
-        }
-
-        $generator->generate();
-
+        set_transient('errors', $model->getErrors(), 20);
+        wp_redirect(admin_url('edit.php?post_type=reports'));
+        exit;
     }
 
 }

@@ -15,6 +15,46 @@ namespace CRMConnector\Database;
 trait DatabaseQuery
 {
     /**
+     * Returns entire post including post meta values
+     *
+     * @param $post_type
+     * @param $post_id
+     * @return array|null|\WP_Post
+     */
+    public function get_post_with_meta_values_from_post_id($post_type, $post_id)
+    {
+        $data = [];
+        foreach($this->get_field_names_for_post_type($post_type) as $field) {
+            $data[$field] = get_post_meta($post_id, $field, true);
+        }
+        return $data;
+    }
+
+    /**
+     * @param $post_type
+     * @return array
+     */
+    public function get_field_names_for_post_type($post_type)
+    {
+        $groups = acf_get_field_groups(array('post_type' => $post_type));
+        $fields = [];
+        foreach($groups as $group)
+        {
+            $group_fields = acf_get_fields($group['key']);
+            foreach($group_fields as $group_field)
+            {
+                if(empty($group_field['name']) || empty($group_field['label']))
+                {
+                    continue;
+                }
+
+                $fields[] = $group_field['name'];
+            }
+        }
+        return $fields;
+    }
+
+    /**
      * Returns a single column for a given post type
      *
      * @param string $key

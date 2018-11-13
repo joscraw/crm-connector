@@ -12,6 +12,12 @@ use WP_Query;
  */
 class ChapterSearch
 {
+    use DatabaseQuery;
+
+    /**
+     * @var string
+     */
+    const POST_TYPE = 'chapters';
 
     /**
      * @param Contact $contact

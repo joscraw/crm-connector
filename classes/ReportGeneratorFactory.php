@@ -9,33 +9,25 @@ namespace CRMConnector;
 class ReportGeneratorFactory
 {
     /**
-     * @var int
-     */
-    private $report_id;
-
-    /**
      * @var null|ReportGeneratorFactory
      */
     private static $instance = null;
 
     /**
      * ReportGenerator constructor.
-     * @param int $report_id
      */
-    private function __construct($report_id)
+    private function __construct()
     {
-        $this->report_id = $report_id;
     }
 
     /**
-     * @param $report_id
      * @return ReportGeneratorFactory|null
      */
-    public static function getInstance($report_id)
+    public static function getInstance()
     {
         if (self::$instance == null)
         {
-            self::$instance = new self($report_id);
+            self::$instance = new self();
         }
 
         return self::$instance;
@@ -43,14 +35,14 @@ class ReportGeneratorFactory
 
     /**
      * @param $report_type
-     * @return bool|CurrentChapterRosterReport
+     * @return bool|DirectMailerReport
      */
     public function get($report_type)
     {
         switch($report_type)
         {
-            case 'current_chapter_roster':
-                $report = new CurrentChapterRosterReport($this->report_id);
+            case 'direct_mailing':
+                $report = new DirectMailerReport();
                 return $report;
                 break;
         }

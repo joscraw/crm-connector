@@ -10,29 +10,26 @@ use CRMConnector\Models\Contact;
  */
 class ContactSearch
 {
+    use DatabaseQuery;
+
     /**
-     * @return array
+     * @var string
      */
-    public function get_contact_fields()
+    const POST_TYPE = 'contacts';
+
+    /**
+     * Returns all the data fields for the contact object
+     *
+     * @param $contact_id
+     * @return array|null|\WP_Post
+     */
+    public function get_from_id($contact_id)
     {
-        $groups = acf_get_field_groups(array('post_type' => 'contacts'));
-
-        $fields = [];
-        foreach($groups as $group)
-        {
-            $group_fields = acf_get_fields($group['key']);
-            foreach($group_fields as $group_field)
-            {
-                if(empty($group_field['name']) || empty($group_field['label']))
-                {
-                    continue;
-                }
-
-                $fields[$group_field['name']] = null;
-            }
+        $data = [];
+        foreach($this->get_field_names_for_post_type(self::POST_TYPE) as $field) {
+            $data[$field] = get_post_meta($contact_id, $field, true);
         }
-
-        return $fields;
+        return $data;
     }
 
     /**
