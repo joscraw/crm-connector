@@ -215,6 +215,7 @@ class DirectMailerReport extends AbstractReportGenerator
 
             $rows[] = $row;
             $this->progress->complete_current_step();
+
             $logger->write(sprintf("%s / %s contacts added to report", $this->progress->getCurrentStep(), $this->progress->get_total_steps()));
         }
 

@@ -383,23 +383,23 @@ class Backend
         }
 
         if ( $column_name == 'status') {
-            printf( '%s', isset($result->status) ? $result->status : '');
+            printf( '%s', !empty($result->status) ? $result->status : '');
         }
 
         if ( $column_name == 'report_type') {
-            printf( '%s', isset($result->report_type) ? $result->report_type : '');
+            printf( '%s', !empty($result->report_type) ? $result->report_type : '');
         }
 
         if ( $column_name == 'created_at') {
-            printf( '%s', isset($result->created_at) ? $result->created_at : '');
+            printf( '%s', !empty($result->created_at) ? $result->created_at : '');
         }
 
         if ( $column_name == 'completed_at') {
-            printf( '%s', isset($result->completed_at) ? $result->completed_at : '');
+            printf( '%s', !empty($result->completed_at) ? $result->completed_at : '');
         }
 
         if ( $column_name == 'log_file')
-            printf( '<a target="_blank" href="%s">Log File</a>', $result->log_file ? CRMCFunctions::plugin_url() . '/logs/' . $result->log_file : '');
+            printf( '<a target="_blank" href="%s">Log File</a>', !empty($result->log_file) ? CRMCFunctions::plugin_url() . '/logs/' . $result->log_file : '');
     }
 
     public function add_import_contacts_button_to_chapters_page()
