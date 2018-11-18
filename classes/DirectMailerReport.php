@@ -2,19 +2,23 @@
 
 namespace CRMConnector;
 
-ini_set('max_execution_time', 300);
+ini_set('max_execution_time', 0);
 
-use CRMConnector\Api\Models\Contact;
+
 use CRMConnector\Database\ChapterSearch;
 use CRMConnector\Database\ContactSearch;
 use CRMConnector\Database\ChapterInvitationSearch;
 use CRMConnector\Database\DropSearch;
 use CRMConnector\Database\DatabaseQuery;
-use CRMConnector\Models\Chapter;
 use CRMConnector\AbstractReportGenerator;
+use CRMConnector\Models\ChapterInvitation;
 use CRMConnector\Utils\CRMCFunctions;
 use CRMConnector\Utils\Logger;
 use WP_Query;
+use CRMConnector\Models\Contact;
+use CRMConnector\Models\Chapter;
+use CRMConnector\Models\Drop;
+use CRMConnector\Database\ReportSearch;
 
 /**
  * Class CurrentChapterRosterReport
@@ -24,6 +28,8 @@ class DirectMailerReport extends AbstractReportGenerator
 {
     use DatabaseQuery;
     use Fileable;
+
+    const NUM_OF_CHAPTER_LEADERSHIP = 6;
 
     /**
      * @var ContactSearch
@@ -82,9 +88,42 @@ class DirectMailerReport extends AbstractReportGenerator
         'Letterhead',
         'Signature Type',
         'Advisor Provided Electronic Signature',
-        'Chapter Officers',
-        'Chapter Presidents',
-        'Chapter Advisers',
+        'Chapter Officer1 Name',
+        'Chapter Officer1 Email',
+        'Chapter Officer2 Name',
+        'Chapter Officer2 Email',
+        'Chapter Officer3 Name',
+        'Chapter Officer3 Email',
+        'Chapter Officer4 Name',
+        'Chapter Officer4 Email',
+        'Chapter Officer5 Name',
+        'Chapter Officer5 Email',
+        'Chapter Officer6 Name',
+        'Chapter Officer6 Email',
+        'Chapter President1 Name',
+        'Chapter President1 Email',
+        'Chapter President2 Name',
+        'Chapter President2 Email',
+        'Chapter President3 Name',
+        'Chapter President3 Email',
+        'Chapter President4 Name',
+        'Chapter President4 Email',
+        'Chapter President5 Name',
+        'Chapter President5 Email',
+        'Chapter President6 Name',
+        'Chapter President6 Email',
+        'Chapter Adviser1 Name',
+        'Chapter Adviser1 Email',
+        'Chapter Adviser2 Name',
+        'Chapter Adviser2 Email',
+        'Chapter Adviser3 Name',
+        'Chapter Adviser3 Email',
+        'Chapter Adviser4 Name',
+        'Chapter Adviser4 Email',
+        'Chapter Adviser5 Name',
+        'Chapter Adviser5 Email',
+        'Chapter Adviser6 Name',
+        'Chapter Adviser6 Email',
         'Summer Drop Deadline Wave 1',
         'Summer Drop Deadline Wave 2',
         'Summer Drop Deadline Wave 3',
@@ -98,14 +137,17 @@ class DirectMailerReport extends AbstractReportGenerator
 
     /**
      * CurrentChapterRosterReport constructor.
+     * @param $report_id
      */
-    public function __construct()
+    public function __construct($report_id)
     {
         $this->contact_search = new ContactSearch();
         $this->chapter_search = new ChapterSearch();
         $this->chapter_invitation_search = new ChapterInvitationSearch();
         $this->drop_search = new DropSearch();
         $this->progress = new ReportProgress();
+
+        parent::__construct($report_id);
     }
 
     /**
@@ -128,9 +170,28 @@ class DirectMailerReport extends AbstractReportGenerator
         $contacts = get_posts($args);
 
         $rows = [];
+        $i = 0;
         foreach($contacts as $contact) {
             $row = [];
+
             $contact = $this->contact_search->get_post_with_meta_values_from_post_id(ContactSearch::POST_TYPE, $contact->ID);
+
+            if(!$contact) {
+                continue;
+            }
+
+            if(!$this->is_prospect($contact)) {
+                continue;
+            }
+
+            if($this->do_not_mail($contact)) {
+                continue;
+            }
+
+            if($this->has_invalid_address($contact)) {
+                continue;
+            }
+
             $row[] = isset($contact['first_name']) ? $contact['first_name'] : '';
             $row[] = isset($contact['last_name']) ? $contact['last_name'] : '';
             $row[] = isset($contact['permanent_address_1']) ? $contact['permanent_address_1'] : '';
@@ -153,70 +214,61 @@ class DirectMailerReport extends AbstractReportGenerator
             $row[] = isset($contact['s3_code']) ? $contact['s3_code'] : '';
             $row[] = isset($contact['s4_code']) ? $contact['s4_code'] : '';
 
-            $account_name = !empty($contact['account_name']) ? $contact['account_name'] : null;
+            $account_name = isset($contact['account_name']) ? $contact['account_name'] : '';
+
+            if($this->chapter_does_not_match($account_name)) {
+                continue;
+            }
+
             $chapter = $this->chapter_search->get_post_with_meta_values_from_post_id(ChapterSearch::POST_TYPE, $account_name);
-            $row[] = !empty($chapter['facebook_url']) ? $chapter['facebook_url'] : '';
-            $row[] = !empty($chapter['induction_date']) ? $chapter['induction_date'] : '';
-            $row[] = !empty($chapter['induction_location']) ? $chapter['induction_location'] : '';
-            $row[] = !empty($chapter['induction_time']) ? $chapter['induction_time'] : '';
+            $row[] = isset($chapter['facebook_url']) ? $chapter['facebook_url'] : '';
+            $row[] = isset($chapter['induction_date']) ? $chapter['induction_date'] : '';
+            $row[] = isset($chapter['induction_location']) ? $chapter['induction_location'] : '';
+            $row[] = isset($chapter['induction_time']) ? $chapter['induction_time'] : '';
 
-            // assume that the chapter invitation with the highest id is the most recent
-            // todo this might need better logic. Reach out to nscs about this
-            $most_recent_chapter_invitation_id = (!empty($chapter['chapter_invitations']) && is_array($chapter['chapter_invitations']) && count($chapter['chapter_invitations']) > 0) ? max($chapter['chapter_invitations']) : null;
+            $chapter_invitation = $this->chapter_invitation_search->get_post_with_meta_values_from_post_id(ChapterInvitationSearch::POST_TYPE, $this->get_most_recent_chapter_invitation_id($chapter));
+            $row[] = isset($chapter_invitation['letterhead']) ? $chapter_invitation['letterhead'] : '';
+            $row[] = isset($chapter_invitation['signature_type']) ? $chapter_invitation['signature_type'] : '';
+            $row[] = isset($chapter_invitation['advisor_provided_electronic_signature']) ? $chapter_invitation['advisor_provided_electronic_signature'] : '';
 
-            $chapter_invitation = $this->chapter_invitation_search->get_post_with_meta_values_from_post_id(ChapterInvitationSearch::POST_TYPE, $most_recent_chapter_invitation_id);
-            $row[] = !empty($chapter_invitation['letterhead']) ? $chapter_invitation['letterhead'] : '';
-            $row[] = !empty($chapter_invitation['signature_type']) ? $chapter_invitation['signature_type'] : '';
-            $row[] = !empty($chapter_invitation['advisor_provided_electronic_signature']) ? $chapter_invitation['advisor_provided_electronic_signature'] : '';
-
-
-            $chapter_officers = (!empty($chapter_invitation['chapter_officers']) && is_array($chapter_invitation['chapter_officers']) && count($chapter_invitation['chapter_officers']) > 0) ? $chapter_invitation['chapter_officers'] : [];
-            $contact_info_string_array = [];
-            foreach($chapter_officers as $chapter_officer_id) {
-                $chapter_officer = $this->contact_search->get_post_with_meta_values_from_post_id(ContactSearch::POST_TYPE, $chapter_officer_id);
-                $contact_info_string_array[] = $this->format_contact($chapter_officer);
+            if(!$this->is_invitation_approved($chapter_invitation)) {
+                continue;
             }
-            $row[] = implode(",",$contact_info_string_array);
 
-            $chapter_presidents = (!empty($chapter_invitation['chapter_president']) && is_array($chapter_invitation['chapter_president']) && count($chapter_invitation['chapter_president']) > 0) ? $chapter_invitation['chapter_president'] : [];
-            $contact_info_string_array = [];
-            foreach($chapter_presidents as $chapter_president_id) {
-                $chapter_president = $this->contact_search->get_post_with_meta_values_from_post_id(ContactSearch::POST_TYPE, $chapter_president_id);
-                $contact_info_string_array[] = $this->format_contact($chapter_president);
+            if(!$this->is_invitation_ready_to_print($chapter_invitation)) {
+                continue;
             }
-            $row[] = implode(",",$contact_info_string_array);
 
-            $advisors = (!empty($chapter_invitation['advisors']) && is_array($chapter_invitation['advisors']) && count($chapter_invitation['advisors']) > 0) ? $chapter_invitation['advisors'] : [];
-            $contact_info_string_array = [];
-            foreach($advisors as $advisor_id) {
-                $advisor = $this->contact_search->get_post_with_meta_values_from_post_id(ContactSearch::POST_TYPE, $advisor_id);
-                $contact_info_string_array[] = $this->format_contact($advisor);
-            }
-            $row[] = implode(",",$contact_info_string_array);
+            $this->set_chapter_leadership($this->get_chapter_officer_ids($chapter), $row);
 
-            $summer_drop_id = !empty($chapter_invitation['summer_drop']) ? $chapter_invitation['summer_drop'] : null;
-            $summer_drop = $this->drop_search->get_post_with_meta_values_from_post_id(DropSearch::POST_TYPE, $summer_drop_id);
-            $row[] = !empty($summer_drop['deadline_-_wave_1']) ? date_create_from_format('Ymd', $summer_drop['deadline_-_wave_1'])->format("m/d/Y") : '';
-            $row[] = !empty($summer_drop['deadline_-_wave_2']) ? date_create_from_format('Ymd', $summer_drop['deadline_-_wave_2'])->format("m/d/Y") : '';
-            $row[] = !empty($summer_drop['deadline_-_wave_3']) ? date_create_from_format('Ymd', $summer_drop['deadline_-_wave_3'])->format("m/d/Y") : '';
+            $this->set_chapter_leadership($this->get_chapter_president_ids($chapter), $row);
+
+            $this->set_chapter_leadership($this->get_chapter_advisor_ids($chapter), $row);
 
 
-            $spring_drop_id = !empty($chapter_invitation['spring_drop']) ? $chapter_invitation['spring_drop'] : null;
-            $spring_drop = $this->drop_search->get_post_with_meta_values_from_post_id(DropSearch::POST_TYPE, $spring_drop_id);
-            $row[] = !empty($spring_drop['deadline_-_wave_1']) ? date_create_from_format('Ymd', $spring_drop['deadline_-_wave_1'])->format("m/d/Y") : '';
-            $row[] = !empty($spring_drop['deadline_-_wave_2']) ? date_create_from_format('Ymd', $spring_drop['deadline_-_wave_2'])->format("m/d/Y") : '';
-            $row[] = !empty($spring_drop['deadline_-_wave_3']) ? date_create_from_format('Ymd', $spring_drop['deadline_-_wave_3'])->format("m/d/Y") : '';
+            $summer_drop = isset($chapter_invitation['summer_drop']) ? $chapter_invitation['summer_drop'] : '';
+            $summer_drop = $this->drop_search->get_post_with_meta_values_from_post_id(DropSearch::POST_TYPE, $summer_drop);
+            $this->set_waves($summer_drop, $row);
 
-            $fall_drop_id = !empty($chapter_invitation['fall_drop']) ? $chapter_invitation['fall_drop'] : null;
-            $fall_drop = $this->drop_search->get_post_with_meta_values_from_post_id(DropSearch::POST_TYPE, $fall_drop_id);
-            $row[] = !empty($fall_drop['deadline_-_wave_1']) ? date_create_from_format('Ymd', $fall_drop['deadline_-_wave_1'])->format("m/d/Y") : '';
-            $row[] = !empty($fall_drop['deadline_-_wave_2']) ? date_create_from_format('Ymd', $fall_drop['deadline_-_wave_2'])->format("m/d/Y") : '';
-            $row[] = !empty($fall_drop['deadline_-_wave_3']) ? date_create_from_format('Ymd', $fall_drop['deadline_-_wave_3'])->format("m/d/Y") : '';
+            $spring_drop = isset($chapter_invitation['spring_drop']) ? $chapter_invitation['spring_drop'] : '';
+            $spring_drop = $this->drop_search->get_post_with_meta_values_from_post_id(DropSearch::POST_TYPE, $spring_drop);
+            $this->set_waves($spring_drop, $row);
+
+            $fall_drop = isset($chapter_invitation['fall_drop']) ? $chapter_invitation['fall_drop'] : '';
+            $fall_drop = $this->drop_search->get_post_with_meta_values_from_post_id(DropSearch::POST_TYPE, $fall_drop);
+            $this->set_waves($fall_drop, $row);
 
             $rows[] = $row;
             $this->progress->complete_current_step();
 
             $logger->write(sprintf("%s / %s contacts added to report", $this->progress->getCurrentStep(), $this->progress->get_total_steps()));
+
+            $i++;
+
+            if($i == 20) {
+                break;
+            }
+
         }
 
         array_unshift($rows, $this->column_names);
@@ -263,5 +315,226 @@ class DirectMailerReport extends AbstractReportGenerator
             !empty($contact['full_name']) ? $contact['full_name'] : '',
             !empty($contact['email']) ? $contact['email'] : ''
         );
+    }
+
+    /**
+     * @param $chapter
+     * @return mixed|null
+     */
+    private function get_most_recent_chapter_invitation_id($chapter) {
+
+        if(!isset($chapter['chapter_invitations'])) {
+            return null;
+        }
+
+        if(!is_array($chapter['chapter_invitations'])) {
+            return null;
+        }
+
+        if(count($chapter['chapter_invitations']) === 0) {
+            return null;
+        }
+
+        return max($chapter['chapter_invitations']);
+
+    }
+
+    private function get_chapter_officer_ids($chapter) {
+
+        if(!isset($chapter['chapter_officer'])) {
+            return [];
+        }
+
+        if(!is_array($chapter['chapter_officer'])) {
+            return [];
+        }
+
+        if(count($chapter['chapter_officer']) === 0) {
+            return [];
+        }
+
+        return $chapter['chapter_officer'];
+    }
+
+    /**
+     * @param $chapter
+     * @return array
+     */
+    private function get_chapter_president_ids($chapter) {
+
+        if(!isset($chapter['chapter_president_'])) {
+            return [];
+        }
+
+        if(!is_array($chapter['chapter_president_'])) {
+            return [];
+        }
+
+        if(count($chapter['chapter_president_']) === 0) {
+            return [];
+        }
+
+        return $chapter['chapter_president_'];
+    }
+
+    /**
+     * @param $chapter
+     * @return array
+     */
+    private function get_chapter_advisor_ids($chapter) {
+
+        if(!isset($chapter['chapter_advisor_'])) {
+            return [];
+        }
+
+        if(!is_array($chapter['chapter_advisor_'])) {
+            return [];
+        }
+
+        if(count($chapter['chapter_advisor_']) === 0) {
+            return [];
+        }
+
+        return $chapter['chapter_advisor_'];
+    }
+
+    /**
+     * @param $chapter_leadership_ids
+     * @param $row
+     */
+    private function set_chapter_leadership($chapter_leadership_ids, &$row) {
+        $starting_array_index = count($chapter_leadership_ids);
+        $num_values_to_insert = (self::NUM_OF_CHAPTER_LEADERSHIP - $starting_array_index) >= 0 ? (self::NUM_OF_CHAPTER_LEADERSHIP - $starting_array_index) : 0;
+        $chapter_leaders = $chapter_leadership_ids + array_fill($starting_array_index, $num_values_to_insert, null);
+        foreach( $chapter_leaders as $chapter_leader_id) {
+            $contact = $this->contact_search->get_post_with_meta_values_from_post_id(ContactSearch::POST_TYPE, $chapter_leader_id);
+            $row[] = isset($contact['full_name']) ? $contact['full_name'] : '';
+            $row[] = isset($contact['email']) ? $contact['email'] : '';
+        }
+    }
+
+    /**
+     * @param $drop
+     * @param $row
+     */
+    private function set_waves($drop, &$row) {
+
+        $report = $this->get_report();
+        $expected_drop = isset($report['drop']) ? $report['drop'] : '';
+
+        if($expected_drop && $expected_drop !== $drop['ID']) {
+            $row[] = '';
+            $row[] = '';
+            $row[] = '';
+        }
+
+        $row[] = !empty($drop['deadline_wave_one']) ? date_create_from_format('Ymd', $drop['deadline_wave_one'])->format("m/d/Y") : '';
+        $row[] = !empty($drop['deadline_wave_two']) ? date_create_from_format('Ymd', $drop['deadline_wave_two'])->format("m/d/Y") : '';
+        $row[] = !empty($drop['deadline_wave_three']) ? date_create_from_format('Ymd', $drop['deadline_wave_three'])->format("m/d/Y") : '';
+    }
+
+    /**
+     * @param $contact
+     * @return bool
+     */
+    private function is_prospect($contact) {
+
+        if(!isset($contact['contact_record_type'])) {
+            return false;
+        }
+
+        if(stripos($contact['contact_record_type'], 'prospect') !== null) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $contact
+     * @return bool
+     */
+    private function do_not_mail($contact) {
+
+        if(!isset($contact['do_not_mail'])) {
+            return false;
+        }
+
+        if($contact['do_not_mail'] === "") {
+            return false;
+        }
+
+        if((bool) $contact['do_not_mail'] === true) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $chapter_invitation
+     * @return bool
+     */
+    private function is_invitation_approved($chapter_invitation) {
+
+        //todo ask if this is the proper way to check this
+        if(empty($chapter_invitation['invitation_approval_date'])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param $chapter_invitation
+     * @return bool
+     */
+    private function is_invitation_ready_to_print($chapter_invitation) {
+
+        if((bool) $chapter_invitation['invitation_ready_to_print'] === false) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function has_invalid_address($contact) {
+
+        $permanent_address_bad = false;
+        $current_address_bad = false;
+
+        if(!isset($contact['permanent_address_1'])) {
+            $permanent_address_bad = true;
+        }
+
+        if(isset($contact['permanent_address_bad']) && (bool) $contact['permanent_address_bad'] === true) {
+            $permanent_address_bad = true;
+        }
+
+        if(!isset($contact['current_address_1'])) {
+            $current_address_bad = true;
+        }
+
+        if(isset($contact['current_address_bad']) && (bool) $contact['current_address_bad'] === true) {
+            $current_address_bad = true;
+        }
+
+        return $permanent_address_bad && $current_address_bad;
+    }
+
+    /**
+     * @param $account_name
+     * @return bool
+     */
+    private function chapter_does_not_match($account_name) {
+
+        $report = $this->get_report();
+        $chapter = isset($report['chapter']) ? $report['chapter'] : '';
+
+        if($chapter && $chapter !== $account_name) {
+            return true;
+        }
+
+        return false;
     }
 }

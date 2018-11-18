@@ -39,4 +39,17 @@ class Contact
             $this->$key = $value;
         }
     }
+
+    public function is_prospect() {
+
+        if(!isset($contact['contact_record_type'])) {
+            return false;
+        }
+
+        if(stripos($contact['contact_record_type'], 'prospect') !== null) {
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -64,11 +64,11 @@ class ContactSearch
      * @param $args
      * @return array|bool
      */
-    public function get_from_args($args)
+    public function get_post_from_args($args)
     {
         $args = [
             'post_type' => 'contacts',
-            'posts_per_page' => 1,
+            'posts_per_page' => -1,
             'meta_query' => array(
                 $args
             ),
@@ -78,7 +78,7 @@ class ContactSearch
 
         if(count($posts) === 0)
         {
-            return false;
+            return [];
         }
 
         return $posts;

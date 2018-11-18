@@ -30,10 +30,10 @@ $report_id = $result->report_id;
 $report_type = $result->report_type;
 $logger = new Logger();
 GenerateReportCronInitializer::set_log_file($cron_id, $logger);
-GenerateReportCronInitializer::progress_cron($cron_id);
+/*GenerateReportCronInitializer::progress_cron($cron_id);*/
 
 
-$factory = ReportGeneratorFactory::getInstance();
+$factory = ReportGeneratorFactory::getInstance($report_id);
 if(!$report = $factory->get($report_type)) {
     GenerateReportCronInitializer::fail_cron($cron_id);
     $logger->write(sprintf("Initializing Cron with id %s...", $cron_id));

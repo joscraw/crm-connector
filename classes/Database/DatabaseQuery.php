@@ -19,13 +19,22 @@ trait DatabaseQuery
      *
      * @param $post_type
      * @param $post_id
-     * @return array|null|\WP_Post
+     * @return array|bool
      */
     public function get_post_with_meta_values_from_post_id($post_type, $post_id)
     {
         $data = [];
+
+        if(!$post = get_post($post_id)) {
+            return false;
+        }
+
+        foreach($post as $key => $value) {
+            $data[$key] = $value;
+        }
+
         foreach($this->get_field_names_for_post_type($post_type) as $field) {
-            $data[$field] = get_post_meta($post_id, $field, true);
+            $data[$field] = get_post_meta($post_id, $field, true) !== false ? get_post_meta($post_id, $field, true) : null;
         }
         return $data;
     }

@@ -14,20 +14,28 @@ class ReportGeneratorFactory
     private static $instance = null;
 
     /**
-     * ReportGenerator constructor.
+     * @var string
      */
-    private function __construct()
+    private $report_id;
+
+    /**
+     * ReportGenerator constructor.
+     * @param $report_id
+     */
+    private function __construct($report_id)
     {
+        $this->report_id = $report_id;
     }
 
     /**
+     * @param $report_id
      * @return ReportGeneratorFactory|null
      */
-    public static function getInstance()
+    public static function getInstance($report_id)
     {
         if (self::$instance == null)
         {
-            self::$instance = new self();
+            self::$instance = new self($report_id);
         }
 
         return self::$instance;
@@ -39,10 +47,9 @@ class ReportGeneratorFactory
      */
     public function get($report_type)
     {
-        switch($report_type)
-        {
+        switch($report_type) {
             case 'direct_mailing':
-                $report = new DirectMailerReport();
+                $report = new DirectMailerReport($this->report_id);
                 return $report;
                 break;
         }
