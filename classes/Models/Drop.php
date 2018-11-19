@@ -2,11 +2,13 @@
 
 namespace CRMConnector\Models;
 
+use CRMConnector\Database\Hydratable;
+
 /**
  * Class Drop
  * @package CRMConnector\Models
  */
-class Drop
+class Drop implements Hydratable
 {
     public function __get($property)
     {
@@ -27,9 +29,9 @@ class Drop
         return get_object_vars($this);
     }
 
-    public function fromArray($arr)
+    public function fromArray(array $array)
     {
-        foreach($arr as $key => $value)
+        foreach($array as $key => $value)
         {
             $this->$key = $value;
         }

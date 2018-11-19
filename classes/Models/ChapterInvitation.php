@@ -2,11 +2,13 @@
 
 namespace CRMConnector\Models;
 
+use CRMConnector\Database\Hydratable;
+
 /**
  * Class ChapterInvitation
  * @package CRMConnector\Models
  */
-class ChapterInvitation
+class ChapterInvitation implements Hydratable
 {
     public function __get($property)
     {
@@ -27,9 +29,9 @@ class ChapterInvitation
         return get_object_vars($this);
     }
 
-    public function fromArray($arr)
+    public function fromArray(array $array)
     {
-        foreach($arr as $key => $value)
+        foreach($array as $key => $value)
         {
             $this->$key = $value;
         }

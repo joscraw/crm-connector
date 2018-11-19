@@ -14,31 +14,17 @@ class Collection implements \IteratorAggregate
 
     public function addItem($obj, $key = null)
     {
-        if ($key == null)
-        {
+        if ($key == null) {
             $this->items[] = $obj;
         }
-        else
-        {
-            if (isset($this->items[$key]))
-            {
-                throw new \Exception("Key $key already in use.");
-            }
-            else
-            {
-                $this->items[$key] = $obj;
-            }
+        else {
+            $this->items[$key] = $obj;
         }
     }
     public function deleteItem($key)
     {
-        if (isset($this->items[$key]))
-        {
+        if (isset($this->items[$key])) {
             unset($this->items[$key]);
-        }
-        else
-        {
-            throw new \Exception("Invalid key $key.");
         }
     }
     public function getItem($key)
@@ -46,10 +32,6 @@ class Collection implements \IteratorAggregate
         if (isset($this->items[$key]))
         {
             return $this->items[$key];
-        }
-        else
-        {
-            throw new \Exception("Invalid key $key.");
         }
     }
     public function keys()

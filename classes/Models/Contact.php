@@ -3,13 +3,14 @@
 namespace CRMConnector\Models;
 
 use CRMConnector\Database\DatabaseAttributes;
-use CRMConnector\DeDuplicate;
+use CRMConnector\Database\Hydratable;
+
 
 /**
  * Class Contact
  * @package CRMConnector\Models
  */
-class Contact
+class Contact implements Hydratable
 {
     use DatabaseAttributes;
 
@@ -32,9 +33,9 @@ class Contact
         return get_object_vars($this);
     }
 
-    public function fromArray($arr)
+    public function fromArray(array $array)
     {
-        foreach($arr as $key => $value)
+        foreach($array as $key => $value)
         {
             $this->$key = $value;
         }
