@@ -33,6 +33,28 @@ class ContactSearch
     }
 
     /**
+     * @param $account_name
+     * @return array
+     */
+    public function get_all_from_chapter($account_name) {
+
+        // FETCH THE CHAPTER THE USER BELONGS TO
+        $args = [
+            'post_type' => 'contacts',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                array(
+                    'key' => 'account_name',
+                    'value' => $account_name,
+                    'compare' => '=',
+                ),
+            ),
+        ];
+        $posts = get_posts($args);
+        return $posts;
+    }
+
+    /**
      * @param $email
      * @return bool
      */

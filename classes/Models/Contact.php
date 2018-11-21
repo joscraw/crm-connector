@@ -43,12 +43,73 @@ class Contact implements Hydratable
 
     public function is_prospect() {
 
-        if(!isset($contact['contact_record_type'])) {
+        if(!isset($this->contact_record_type)) {
             return false;
         }
 
-        if(stripos($contact['contact_record_type'], 'prospect') !== null) {
+        if(stripos($this->contact_record_type, 'prospect') !== null) {
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function do_not_mail() {
+
+        if(!isset($this->do_not_mail)) {
+            return false;
+        }
+
+        if($this->do_not_mail === "") {
+            return false;
+        }
+
+        if((bool) $this->do_not_mail === true) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function has_valid_address() {
+
+        $permanent_address_valid = true;
+        $current_address_valid = true;
+
+        if(!isset($this->permanent_address_1)) {
+            $permanent_address_valid = false;
+        }
+
+        if(isset($this->permanent_address_1) && (bool) $this->permanent_address_bad === true) {
+            $permanent_address_valid = false;
+        }
+
+        if(!isset($this->current_address_1)) {
+            $current_address_valid = false;
+        }
+
+        if(isset($this->current_address_bad) && (bool) $this->current_address_bad === true) {
+            $current_address_valid = false;
+        }
+
+        return $permanent_address_valid || $current_address_valid;
+    }
+
+    public function get_prospect_load_date() {
+
+        if(!empty($this->prospect_load_date)) {
+            $datetime = new \DateTime();
+            return $datetime->createFromFormat('!Ymd', $this->prospect_load_date);
+        }
+
+        if(!empty($this->post_date)) {
+            return new \DateTime($this->post_date);
         }
 
         return false;
