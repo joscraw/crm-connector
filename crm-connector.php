@@ -33,6 +33,9 @@ use CRMConnector\Workflows\Sub\SetChapterUpdateChapter;
 use CRMConnector\Workflows\Sub\SetChapterUpdateSender;
 use CRMConnector\Workflows\Sub\SetContactTitle;
 use CRMConnector\Workflows\Sub\SetCurrentChapterLeadership;
+use CRMConnector\Models\Contact;
+use CRMConnector\Database\Hydrator;
+use CRMConnector\Database\ContactSearch;
 
 $autoload_path = __DIR__ . '/vendor/autoload.php';
 
@@ -104,13 +107,35 @@ class CRMConnector
 
     }
 
+
     private function _set_data()
     {
-        $this->data['current_user'] = $current_user = !empty(wp_get_current_user()) ? wp_get_current_user() : '';
-        $this->data['current_user_email'] = !empty($current_user->user_email) ? $current_user->user_email : '';
-        $this->data['current_user_first_name'] = !empty($current_user->user_firstname) ? $current_user->user_firstname : '';
-        $this->data['current_user_last_name'] = !empty($current_user->user_lastname) ? $current_user->user_lastname : '';
+        $this->data['current_user'] = wp_get_current_user();
+        $this->data['current_user_email'] = wp_get_current_user()->user_email;
+        $this->data['current_user_first_name'] = wp_get_current_user()->user_firstname;
+        $this->data['current_user_last_name'] = wp_get_current_user()->user_lastname;
+        $this->data['current_user_id'] = get_current_user_id();
+        $this->data['is_chapter_leader'] = false;
+        $this->data['is_system_administrator'] = false;
+        $this->data['associated_contact'] = new Contact();
+        $user = wp_get_current_user();
+        $current_user_roles = ['chapter_officer', 'chapter_president', 'chapter_advisor'];
+        $accessible_roles = (array) $user->roles;
+        if($current_user_roles !== array_diff($current_user_roles, $accessible_roles)) {
+            $this->data['is_chapter_leader'] = true;
+        }
+        if(in_array('administrator', $accessible_roles)) {
+            $this->data['is_system_administrator'] = true;
+        }
 
+        if($this->data['current_user_id']) {
+            $contact_search = new ContactSearch();
+            $contact = $contact_search->get_from_portal_user_id($this->data['current_user_id']);
+            if(!empty($contact[0]->ID)) {
+                $contact_array = $contact_search->get_post_with_meta_values_from_post_id(ContactSearch::POST_TYPE, $contact[0]->ID);
+                Hydrator::toObject($contact_array, $this->data['associated_contact'], true);
+            }
+        }
     }
 
     private function _events()
