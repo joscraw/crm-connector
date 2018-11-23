@@ -55,6 +55,27 @@ class ContactSearch
     }
 
     /**
+     * @param $portal_user_id
+     * @return array
+     */
+    public function get_from_portal_user_id($portal_user_id)
+    {
+        $args = [
+            'post_type' => 'contacts',
+            'posts_per_page' => 1,
+            'meta_query' => array(
+                array(
+                    'key' => 'portal_user',
+                    'value' => $portal_user_id,
+                    'compare' => '=',
+                )
+            ),
+        ];
+        $posts = get_posts($args);
+        return $posts;
+    }
+
+    /**
      * @param $email
      * @return bool
      */
