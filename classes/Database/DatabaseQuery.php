@@ -26,7 +26,7 @@ trait DatabaseQuery
         $data = [];
 
         if(!$post = get_post($post_id)) {
-            return false;
+            return [];
         }
 
         foreach($post as $key => $value) {

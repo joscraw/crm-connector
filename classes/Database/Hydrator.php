@@ -33,6 +33,10 @@ class Hydrator
             throw new \Exception("Object must implement the Hydratable interface to by Hydrated.");
         }
 
+        if(empty($array)) {
+            return $object;
+        }
+
         $object->fromArray($array);
 
         if($object instanceof Contact && $build_relational_post_objects) {

@@ -36,6 +36,8 @@ use CRMConnector\Workflows\Sub\SetCurrentChapterLeadership;
 use CRMConnector\Models\Contact;
 use CRMConnector\Database\Hydrator;
 use CRMConnector\Database\ContactSearch;
+use CRMConnector\Workflows\Pub\EventChanged;
+use CRMConnector\Workflows\Sub\SetChapterOnEvent;
 
 $autoload_path = __DIR__ . '/vendor/autoload.php';
 
@@ -118,6 +120,8 @@ class CRMConnector
         $this->data['is_chapter_leader'] = false;
         $this->data['is_system_administrator'] = false;
         $this->data['associated_contact'] = new Contact();
+        $this->data['contact_id'] = null;
+        $this->data['chapter_id'] = null;
         $user = wp_get_current_user();
         $current_user_roles = ['chapter_officer', 'chapter_president', 'chapter_advisor'];
         $accessible_roles = (array) $user->roles;
@@ -133,8 +137,18 @@ class CRMConnector
             $contact = $contact_search->get_from_portal_user_id($this->data['current_user_id']);
             if(!empty($contact[0]->ID)) {
                 $contact_array = $contact_search->get_post_with_meta_values_from_post_id(ContactSearch::POST_TYPE, $contact[0]->ID);
-                Hydrator::toObject($contact_array, $this->data['associated_contact'], true);
+                if(is_array($contact_array)) {
+                    Hydrator::toObject($contact_array, $this->data['associated_contact'], true);
+                }
             }
+        }
+
+        if (!empty($this->data['associated_contact']->ID)){
+            $this->data['contact_id'] = $this->data['associated_contact']->ID;
+        }
+
+        if(!empty($this->data['associated_contact']->chapter->ID)) {
+            $this->data['chapter_id'] = $this->data['associated_contact']->chapter->ID;
         }
     }
 
@@ -160,6 +174,9 @@ class CRMConnector
         $this->data['events'][ContactChanged::class] = (new ContactChanged())
             ->addSubscriber(new SetContactTitle())
             ->addSubscriber(new \CRMConnector\Workflows\Sub\SetContactCodes());
+
+        $this->data['events'][EventChanged::class] = (new EventChanged())
+            ->addSubscriber(new SetChapterOnEvent());
     }
 
     /**
@@ -184,6 +201,10 @@ class CRMConnector
      */
     public function after_save_meta( $post_id, $post, $update )
     {
+        // We need to make sure this only gets called when creating or editing a post and not on page load
+        if(empty($_POST)) {
+            return;
+        }
         $post_type = get_post_type($post_id);
         $meta = get_post_meta($post_id);
         $args = [$meta, $post_id];
@@ -205,6 +226,9 @@ class CRMConnector
                 break;
             case 'contacts':
                 $this->data['events'][ContactChanged::class]->notify($args);
+                break;
+            case 'tribe_events':
+                $this->data['events'][EventChanged::class]->notify($args);
                 break;
         }
         add_action('save_post', array($this, 'after_save_meta'), 100, 3);
