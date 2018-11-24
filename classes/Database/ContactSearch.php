@@ -3,6 +3,7 @@
 namespace CRMConnector\Database;
 
 use CRMConnector\Models\Contact;
+use WP_Query;
 
 /**
  * Class ContactSearch
@@ -52,6 +53,34 @@ class ContactSearch
         ];
         $posts = get_posts($args);
         return $posts;
+    }
+
+    /**
+     * @param $account_name
+     * @return bool|WP_Query
+     */
+    public function wp_query_get_all_from_chapter($account_name) {
+
+        $args = [
+            'post_type' => 'contacts',
+            'posts_per_page' => 10,
+            'paged' => get_query_var( 'paged' ) ?: 1,
+            'meta_query' => array(
+                array(
+                    'key' => 'account_name',
+                    'value' => $account_name,
+                    'compare' => '=',
+                ),
+            ),
+        ];
+
+        if ( $s = get_query_var('search', '')  ) {
+            $args['s'] = $s;
+        }
+
+        $query = new WP_Query($args);
+
+        return $query;
     }
 
     /**
