@@ -114,4 +114,32 @@ class Contact implements Hydratable
 
         return false;
     }
+
+    /**
+     * @param $invitation_code
+     * @return bool
+     */
+    public function invitation_code_belongs_to_user($invitation_code) {
+
+        $possible_codes = [
+            $this->invitation_code,
+            $this->p1_code,
+            $this->p2_code,
+            $this->p3_code,
+            $this->p4_code,
+            $this->s1_code,
+            $this->s2_code,
+            $this->s3_code,
+            $this->s4_code,
+        ];
+
+
+        $possible_codes = array_filter($possible_codes);
+
+        if(in_array($invitation_code, $possible_codes)) {
+            return true;
+        }
+
+        return false;
+    }
 }
