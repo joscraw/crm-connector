@@ -2,6 +2,7 @@
 
 namespace CRMConnector\Models;
 
+use CRMConnector\Database\ChapterSearch;
 use CRMConnector\Database\Hydratable;
 
 /**
@@ -87,4 +88,5 @@ class ChapterInvitation implements Hydratable
 
         return $this->advisors;
     }
+
 }

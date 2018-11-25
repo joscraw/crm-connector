@@ -137,9 +137,7 @@ class CRMConnector
             $contact = $contact_search->get_from_portal_user_id($this->data['current_user_id']);
             if(!empty($contact[0]->ID)) {
                 $contact_array = $contact_search->get_post_with_meta_values_from_post_id(ContactSearch::POST_TYPE, $contact[0]->ID);
-                if(is_array($contact_array)) {
-                    Hydrator::toObject($contact_array, $this->data['associated_contact'], true);
-                }
+                \CRMConnector\Database\ContactHydrator::toObject($contact_array, $this->data['associated_contact']);
             }
         }
 
@@ -202,7 +200,7 @@ class CRMConnector
     public function after_save_meta( $post_id, $post, $update )
     {
         // We need to make sure this only gets called when creating or editing a post and not on page load
-        if(empty($_POST)) {
+        if(empty($_POST) && !CRMCFunctions::isCommandLineInterface()) {
             return;
         }
         $post_type = get_post_type($post_id);

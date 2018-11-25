@@ -83,4 +83,9 @@ class CRMCFunctions
         return $randomString;
     }
 
+    public static function isCommandLineInterface()
+    {
+        return (php_sapi_name() === 'cli');
+    }
+
 }

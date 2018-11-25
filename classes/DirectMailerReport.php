@@ -5,9 +5,13 @@ namespace CRMConnector;
 ini_set('max_execution_time', 0);
 
 
+use CRMConnector\Database\ChapterHydrator;
+use CRMConnector\Database\ChapterInvitationHydrator;
 use CRMConnector\Database\ChapterSearch;
+use CRMConnector\Database\ContactHydrator;
 use CRMConnector\Database\ContactSearch;
 use CRMConnector\Database\ChapterInvitationSearch;
+use CRMConnector\Database\DropHydrator;
 use CRMConnector\Database\DropSearch;
 use CRMConnector\Database\DatabaseQuery;
 use CRMConnector\AbstractReportGenerator;
@@ -152,21 +156,27 @@ class DirectMailerReport extends AbstractReportGenerator
         $rows = [];
         $report = $this->get_report();
         $dropArray = $this->drop_search->get_post_with_meta_values_from_post_id(DropSearch::POST_TYPE, $report['drop']);
-        $drop = Hydrator::toObject($dropArray, new Drop(), true);
+        $drop = DropHydrator::toObject($dropArray, new Drop());
+
 
         foreach($drop->chapter_invitations as $chapter_invitation) {
 
-            if(!isset($chapter_invitation->chapter)) {
+            ChapterInvitationHydrator::toObject([], $chapter_invitation);
+
+            if(!$chapter = $chapter_invitation->chapter) {
                 $logger->write(sprintf("Skipping Chapter Invitation with ID %s and Title %s - missing assigned chapter.", $chapter_invitation->ID, $chapter_invitation->chapter_invitation_title));
                 continue;
             }
 
-            $chapter = $chapter_invitation->chapter;
+            $logger->write(sprintf("Loading Contacts for Chapter Invitation..."));
+            ChapterHydrator::toObject([], $chapter, true);
 
             $logger->write(sprintf("Found %s Contacts for Chapter Invitation %s...", $chapter->contacts->length(), $chapter_invitation->chapter_invitation_title));
 
             $i = 1;
             foreach($chapter->contacts as $contact) {
+
+                ContactHydrator::toObject([], $contact);
 
                 $row = [];
                 $row[] = isset($contact->first_name) ? $contact->first_name : '';
@@ -250,18 +260,21 @@ class DirectMailerReport extends AbstractReportGenerator
                     switch($report['date_comparison']) {
                         case '<':
                             if($prospect_load_date >= $desired_prospect_load_date) {
+                                $logger->write(sprintf("Skipping contact %s. Does fall in desired prospect load date range", $contact->ID));
                                 continue;
                             }
                             break;
 
                         case '>':
                             if($prospect_load_date <= $desired_prospect_load_date) {
+                                $logger->write(sprintf("Skipping contact %s. Does fall in desired prospect load date range", $contact->ID));
                                 continue;
                             }
                             break;
 
                         case '=':
                             if($desired_prospect_load_date !== $prospect_load_date) {
+                                $logger->write(sprintf("Skipping contact %s. Does fall in desired prospect load date range", $contact->ID));
                                 continue;
                             }
                             break;
@@ -269,26 +282,32 @@ class DirectMailerReport extends AbstractReportGenerator
                 }
 
                 if(!$contact->is_prospect()) {
+                    $logger->write(sprintf("Skipping contact %s. Is not a prospect", $contact->ID));
                     continue;
                 }
 
                 if($contact->do_not_mail()) {
+                    $logger->write(sprintf("Skipping contact %s. Is on the do not mail list", $contact->ID));
                     continue;
                 }
 
                 if(!$contact->has_valid_address()) {
+                    $logger->write(sprintf("Skipping contact %s. Does not have a valid address", $contact->ID));
                     continue;
                 }
 
                 if(empty($chapter_invitation->invitation_approved)) {
+                    $logger->write(sprintf("Skipping contact %s. Attached Chapter Invitation has not been approved", $contact->ID));
                    continue;
                 }
 
                 if(empty($chapter_invitation->invitation_ready_to_print)) {
+                    $logger->write(sprintf("Skipping contact %s. Attached Chapter Invitation has not been marked as ready to print", $contact->ID));
                     continue;
                 }
 
                 if(!empty($report['chapter']) && $report['chapter'] !== $chapter->ID) {
+                    $logger->write(sprintf("Skipping contact %s. Does not belong to desired chapter for this export", $contact->ID));
                     continue;
                 }
 
@@ -298,11 +317,6 @@ class DirectMailerReport extends AbstractReportGenerator
                 $i++;
             }
         }
-
-        /* if($this->chapter_does_not_match($account_name)) {
-            continue;
-        }
-        */
 
         array_unshift($rows, $this->column_names);
         $file_name = sprintf("Direct-Mailer-%s.csv", $this->generate_file_name());

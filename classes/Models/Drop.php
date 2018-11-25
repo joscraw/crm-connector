@@ -2,6 +2,7 @@
 
 namespace CRMConnector\Models;
 
+use CRMConnector\Database\ChapterInvitationSearch;
 use CRMConnector\Database\Hydratable;
 
 /**
@@ -48,20 +49,5 @@ class Drop implements Hydratable
     public function get_deadline_wave_three() {
         return (!empty($this->deadline_wave_three) ? date_create_from_format('Ymd', $this->deadline_wave_three)->format("m/d/Y") : null);
     }
-
-    public function get_chapter_invitations() {
-
-        if(!isset($this->chapter_invitations)) {
-            return [];
-        }
-
-        if(!is_array($this->chapter_invitations)) {
-            return [];
-        }
-
-        return $this->chapter_invitations;
-
-    }
-
 
 }

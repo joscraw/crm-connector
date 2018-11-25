@@ -38,7 +38,7 @@ foreach($results as $result) {
     $logger->write(sprintf("Initializing Cron with id %s...", $cron_id));
 
     BatchContactImportCronInitializer::set_log_file($cron_id, $import_id, $logger);
-    /*BatchContactImportCronInitializer::progress_cron($cron_id, $import_id);*/
+    BatchContactImportCronInitializer::progress_cron($cron_id, $import_id);
 
     try {
         $logger->write(sprintf("Loading Spreadsheet..."));
